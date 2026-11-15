@@ -1,4 +1,3 @@
-import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
@@ -72,8 +71,6 @@ export default function ExplorerPage() {
   const placeLabel = stateName
     ?? (point ? `${point.lat.toFixed(1)}°, ${point.lon.toFixed(1)}°` : t('chart.placeRegion', { region: t(`explorer.regions.${region}`) }))
 
-  const toggle = 'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-purple text-ink-muted transition-colors duration-150 hover:bg-deep-purple hover:text-ink'
-
   return (
     <>
       {offline && <p role="status" className="bg-deep-purple px-4 py-2 text-center text-sm">{t('states.offline')}</p>}
@@ -83,32 +80,26 @@ export default function ExplorerPage() {
             variable={variable} region={region} data={trends.data} geo={geo.data} loading={trends.isFetching || geo.isFetching} error={trends.error ?? geo.error}
             refetch={() => { trends.refetch(); geo.refetch() }} start={start} end={end}
             footer={<FilterBar />}
-            cornerLeft={
-              <button onClick={() => setLeft((v) => !v)} aria-expanded={left} aria-controls="panel-left" className={toggle}
-                aria-label={left ? t('explorer.hideInfo') : t('explorer.showInfo')} title={left ? t('explorer.hideInfo') : t('explorer.showInfo')}>
-                {left ? <PanelLeftClose size={18} aria-hidden /> : <PanelLeftOpen size={18} aria-hidden />}
-              </button>
-            }
-            cornerRight={
-              <button onClick={() => setRight((v) => !v)} aria-expanded={right} aria-controls="panel-right" className={`${toggle} ml-2`}
-                aria-label={right ? t('explorer.hideCharts') : t('explorer.showCharts')} title={right ? t('explorer.hideCharts') : t('explorer.showCharts')}>
-                {right ? <PanelRightClose size={18} aria-hidden /> : <PanelRightOpen size={18} aria-hidden />}
-              </button>
-            }
-            overlayLeft={left ? (
-              <div id="panel-left"><VariablePanel variable={variable} imageState={imageState} dataStatus={status} /></div>
-            ) : null}
-            overlayRight={right ? (
-              <div id="panel-right" className="flex flex-col gap-3">
-                {stateName && (
-                  <button onClick={() => set({ state: null, point: null })} className="h-9 self-start rounded-full border border-input-border bg-surface px-3 text-xs text-ink hover:bg-deep-purple">
-                    {t('explorer.selectedState', { name: stateName })} · {t('explorer.clearSelection')}
-                  </button>
-                )}
-                <SeriesPanel variable={variable} data={series.data} loading={series.isFetching} error={series.error} refetch={() => series.refetch()} placeLabel={placeLabel} name={name} />
-                {stats ? <VerdictPanel stats={stats} unit={series.data!.unit} name={name} mode={mode} /> : <Skeleton className="h-52" />}
-              </div>
-            ) : null}
+            left={{
+              open: left, onToggle: () => setLeft((v) => !v), id: 'panel-left', label: t('explorer.panelInfo'),
+              hideLabel: t('explorer.hideInfo'), showLabel: t('explorer.showInfo'),
+              children: <VariablePanel variable={variable} imageState={imageState} dataStatus={status} />,
+            }}
+            right={{
+              open: right, onToggle: () => setRight((v) => !v), id: 'panel-right', label: t('explorer.panelCharts'),
+              hideLabel: t('explorer.hideCharts'), showLabel: t('explorer.showCharts'),
+              children: (
+                <div className="flex flex-col gap-3">
+                  {stateName && (
+                    <button onClick={() => set({ state: null, point: null })} className="h-9 self-start rounded-full border border-input-border bg-surface px-3 text-xs text-ink hover:bg-deep-purple">
+                      {t('explorer.selectedState', { name: stateName })} · {t('explorer.clearSelection')}
+                    </button>
+                  )}
+                  <SeriesPanel variable={variable} data={series.data} loading={series.isFetching} error={series.error} refetch={() => series.refetch()} placeLabel={placeLabel} name={name} />
+                  {stats ? <VerdictPanel stats={stats} unit={series.data!.unit} name={name} mode={mode} /> : <Skeleton className="h-52" />}
+                </div>
+              ),
+            }}
           />
         </div>
       </div>

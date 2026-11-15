@@ -169,7 +169,16 @@
     "showInfo": "Show variable information",
     "hideInfo": "Hide variable information",
     "showCharts": "Show charts and verdict",
-    "hideCharts": "Hide charts and verdict"
+    "hideCharts": "Hide charts and verdict",
+    "filterRegion": "Area",
+    "filterRegionTip": "The area the chart and verdict average over. The map keeps showing every state and dims the ones outside your choice.",
+    "filterDetail": "Detail",
+    "filterDetailTip": "Annual: one dot per year, best for the big picture. Monthly: one dot per month, more detail but noisier.",
+    "filterPeriod": "Years analysed",
+    "filterPeriodTip": "The years used to calculate the trend. A shorter period shows recent change. You can also drag across the chart to pick years.",
+    "filterSummary": "Showing {{region}}, one dot per {{unit}}, {{start}}–{{end}}. This updates the chart, the verdict and the map colors.",
+    "panelInfo": "Variable",
+    "panelCharts": "Charts"
   },
   "chart": {
     "title": "How it changed over time",

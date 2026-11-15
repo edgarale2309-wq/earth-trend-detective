@@ -1,4 +1,4 @@
-import { Info } from 'lucide-react'
+import { Info, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
@@ -57,10 +57,10 @@ function scaleMax(rows: StateRow[]): number {
   return a.length ? Math.max(a[Math.floor(a.length * 0.95)] ?? a[a.length - 1], 1e-9) : 1
 }
 
-export function TrendMap({ variable, region, data, geo, loading, error, refetch, start, end, footer, cornerLeft, cornerRight, overlayLeft, overlayRight }: {
+export function TrendMap({ variable, region, data, geo, loading, error, refetch, start, end, footer, left, right }: {
   variable: VariableId; region: RegionId; data?: TrendsResponse; geo?: GeoJSON.FeatureCollection
-  loading: boolean; error: unknown; refetch: () => void; start: number; end: number; footer: React.ReactNode; cornerLeft?: React.ReactNode; cornerRight?: React.ReactNode
-  overlayLeft?: React.ReactNode; overlayRight?: React.ReactNode
+  loading: boolean; error: unknown; refetch: () => void; start: number; end: number; footer: React.ReactNode
+  left: DockedPanel; right: DockedPanel
 }) {
   const { t } = useTranslation()
   const tRef = useRef(t)
@@ -200,7 +200,6 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
     <section className="flex h-full min-h-[520px] flex-col rounded-2xl border border-purple bg-surface p-3 sm:p-4" aria-labelledby="map-h">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative flex items-center gap-1.5">
-          {cornerLeft}
           <h2 id="map-h" className="section-label">{t('explorer.map')}</h2>
           <button onClick={() => setShowNote((v) => !v)} aria-expanded={showNote} aria-label={t('explorer.mapNote')} title={t('explorer.mapNote')}
             className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted hover:bg-deep-purple hover:text-ink">
@@ -216,7 +215,6 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
           <span>{t('explorer.mapLow')}</span>
           <span className="h-2.5 w-28 rounded-full" style={{ background: legendGradient(palette) }} aria-hidden />
           <span>{t('explorer.mapHigh')}</span>
-          {cornerRight}
         </div>
       </div>
       <p className="mt-1 text-xs text-ink-muted">{t('explorer.mapLegend', { unit })} · {start}–{end}</p>
@@ -244,8 +242,8 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
             </table>
           </div>
         )}
-        <FloatingPanel side="left">{overlayLeft}</FloatingPanel>
-        <FloatingPanel side="right">{overlayRight}</FloatingPanel>
+        <FloatingPanel side="left" panel={left} />
+        <FloatingPanel side="right" panel={right} />
         {error != null && !data && <div className="absolute inset-0 z-20 grid place-items-center bg-background p-4"><ErrorState error={error} onRetry={refetch} /></div>}
       </div>
       <div className="mt-2 flex justify-end">
@@ -256,14 +254,36 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
   )
 }
 
-/** Floating card laid over the map; renders nothing when its content is null (panel hidden). */
-function FloatingPanel({ side, children }: { side: 'left' | 'right'; children?: React.ReactNode }) {
-  if (!children) return null
+export interface DockedPanel { open: boolean; onToggle: () => void; label: string; hideLabel: string; showLabel: string; id: string; children: React.ReactNode }
+
+/** A card floating over the map with a pull-tab fixed to its inner edge. Closing slides the card away
+ *  but leaves the tab docked at the map border, so the control always lives on the panel it moves. */
+function FloatingPanel({ side, panel }: { side: 'left' | 'right'; panel: DockedPanel }) {
+  const isLeft = side === 'left'
+  const Icon = isLeft ? (panel.open ? PanelLeftClose : PanelLeftOpen) : (panel.open ? PanelRightClose : PanelRightOpen)
   return (
-    <div className={`pointer-events-none absolute inset-y-2 z-30 flex ${side === 'left' ? 'left-2 justify-start' : 'right-2 justify-end'}`}>
-      <div className={`pointer-events-auto max-h-full overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${side === 'left' ? 'w-[min(312px,88vw)]' : 'w-[min(400px,92vw)]'}`}>
-        {children}
+    <div
+      className={`pointer-events-none absolute top-2 z-30 flex max-h-[calc(100%-1rem)] flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isLeft ? 'left-2' : 'right-2'}`}
+      style={{
+        width: isLeft ? 'min(312px, 80vw)' : 'min(400px, 84vw)',
+        transform: panel.open ? 'translateX(0)' : `translateX(${isLeft ? 'calc(-100% - 8px)' : 'calc(100% + 8px)'})`,
+      }}
+    >
+      <div
+        id={panel.id} aria-hidden={!panel.open} {...(!panel.open ? { inert: true } : {})}
+        className={`pointer-events-auto min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.55)] transition-opacity duration-200 ${panel.open ? 'opacity-100' : 'opacity-0'}`}
+      >
+        {panel.children}
       </div>
+      <button
+        onClick={panel.onToggle} aria-expanded={panel.open} aria-controls={panel.id}
+        aria-label={panel.open ? panel.hideLabel : panel.showLabel} title={panel.open ? panel.hideLabel : panel.showLabel}
+        className={`pointer-events-auto absolute top-1/2 flex h-28 w-8 -translate-y-1/2 flex-col items-center justify-center gap-2 border border-purple bg-deep-purple text-ink shadow-[0_6px_20px_rgba(0,0,0,0.45)] transition-colors duration-150 hover:bg-purple
+          ${isLeft ? 'left-full rounded-r-2xl border-l-0' : 'right-full rounded-l-2xl border-r-0'}`}
+      >
+        <Icon size={16} aria-hidden />
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] [writing-mode:vertical-rl]" style={{ transform: isLeft ? 'none' : 'rotate(180deg)' }}>{panel.label}</span>
+      </button>
     </div>
   )
 }

@@ -169,7 +169,16 @@
     "showInfo": "Mostrar información de la variable",
     "hideInfo": "Ocultar información de la variable",
     "showCharts": "Mostrar gráficas y veredicto",
-    "hideCharts": "Ocultar gráficas y veredicto"
+    "hideCharts": "Ocultar gráficas y veredicto",
+    "filterRegion": "Zona",
+    "filterRegionTip": "La zona sobre la que se promedian la gráfica y el veredicto. El mapa sigue mostrando todos los estados y atenúa los que quedan fuera de tu elección.",
+    "filterDetail": "Detalle",
+    "filterDetailTip": "Anual: un punto por año, ideal para ver el panorama. Mensual: un punto por mes, más detalle pero más ruido.",
+    "filterPeriod": "Años analizados",
+    "filterPeriodTip": "Los años con los que se calcula la tendencia. Un periodo corto muestra el cambio reciente. También puedes arrastrar sobre la gráfica para elegir años.",
+    "filterSummary": "Mostrando {{region}}, un punto por {{unit}}, {{start}}–{{end}}. Esto actualiza la gráfica, el veredicto y los colores del mapa.",
+    "panelInfo": "Variable",
+    "panelCharts": "Gráficas"
   },
   "chart": {
     "title": "Cómo cambió con el tiempo",
