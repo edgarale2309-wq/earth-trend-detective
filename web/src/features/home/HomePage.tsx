@@ -1,19 +1,40 @@
 import { ArrowRight, BarChart3, Compass, Map as MapIcon, Search, Target } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAccent } from '../../core/useAccent'
 import { VARIABLE_IDS } from '../../core/variables'
 import { VariableCarousel } from './VariableCarousel'
 
+/** The clip has a near-black background, so `screen` blending lets the starfield show through (no solid box)
+ *  and a radial mask dissolves the edges so it never collides with the text column. */
+function HeroVideo() {
+  const { t } = useTranslation()
+  const ref = useRef<HTMLVideoElement>(null)
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { v.pause(); v.currentTime = 5 } else void v.play().catch(() => {})
+  }, [])
+  return (
+    <div className="mx-auto w-full max-w-2xl xl:max-w-none">
+      <video
+        ref={ref} src="/media/hero.mp4" aria-label={t('home.heroVideoAlt')} role="img"
+        autoPlay muted loop playsInline preload="auto"
+        className="block aspect-video w-full bg-transparent object-cover mix-blend-screen"
+        style={{ WebkitMaskImage: 'radial-gradient(ellipse 72% 72% at 50% 50%, #000 55%, transparent 100%)', maskImage: 'radial-gradient(ellipse 72% 72% at 50% 50%, #000 55%, transparent 100%)' }}
+      />
+    </div>
+  )
+}
+
 function Hero() {
   const { t } = useTranslation()
-  const [earthFailed, setEarthFailed] = useState(false)
   const cards = [
     { Icon: BarChart3, k: 'show' }, { Icon: Compass, k: 'use' }, { Icon: Target, k: 'goal' },
   ] as const
   return (
-    <section className="starfield grid items-center gap-10 px-4 py-12 sm:px-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:px-10 lg:py-16">
+    <section className="starfield grid items-center gap-10 px-4 py-12 sm:px-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:px-10 lg:py-16">
       <div>
         <div className="mb-5 h-0.5 w-16 bg-crimson" aria-hidden />
         <p className="text-sm font-semibold uppercase tracking-[0.08em] text-ink-muted">{t('home.eyebrow')}</p>
@@ -29,15 +50,7 @@ function Hero() {
           ))}
         </div>
       </div>
-      <div className="relative mx-auto aspect-video w-full max-w-xl overflow-hidden rounded-3xl bg-surface xl:aspect-square">
-        {earthFailed ? (
-          <div role="img" aria-label={t('home.earthAlt', 'Earth')} className="flex h-full items-center justify-center">
-            <div className="aspect-square h-4/5 rounded-full" style={{ background: 'radial-gradient(circle at 35% 30%, #612073, #2F1740 55%, #140A1E 100%)', boxShadow: 'inset -20px -10px 40px rgba(0,0,0,.5)' }} />
-          </div>
-        ) : (
-          <img src="/images/home/earth.webp" alt="Earth seen from space" onError={() => setEarthFailed(true)} className="h-full w-full object-cover" />
-        )}
-      </div>
+      <HeroVideo />
     </section>
   )
 }
@@ -47,6 +60,7 @@ function HowTo() {
   return (
     <section className="border-t border-purple px-4 py-12 sm:px-6 lg:px-10" aria-labelledby="how-h">
       <h2 id="how-h" className="font-display text-2xl font-semibold">{t('home.howTitle')}</h2>
+      <p className="mt-2 max-w-3xl leading-relaxed text-ink-muted">{t('home.howIntro')}</p>
       <ol className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[1, 2, 3, 4].map((n) => (
           <li key={n} className="relative rounded-2xl border border-purple bg-surface p-5">

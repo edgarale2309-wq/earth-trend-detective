@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../../core/api'
 import { useAccent } from '../../core/useAccent'
 import { VARIABLE_IDS, type VariableId } from '../../core/variables'
+import { BackButton } from '../../shared/BackButton'
 import { ErrorState, Skeleton } from '../../shared/States'
 import { VariableImage } from '../../shared/VariableImage'
 import { fmt, fmtP } from '../explorer/hooks'
@@ -33,6 +34,7 @@ function Intro({ onStart, ready }: { onStart: () => void; ready: boolean }) {
   const steps = [{ Icon: Eye, k: 'i1' }, { Icon: Search, k: 'i2' }, { Icon: Sparkles, k: 'i3' }, { Icon: Trophy, k: 'i4' }] as const
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <BackButton />
       <div className="flex items-center gap-3 text-ink-muted"><Target size={20} aria-hidden /><span className="text-sm font-semibold uppercase tracking-[0.08em]">{t('nav.detective')}</span></div>
       <h1 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">{t('detective.introTitle')}</h1>
       <p className="mt-3 text-lg text-ink-muted">{t('detective.introLead')}</p>
@@ -83,6 +85,7 @@ export default function DetectivePage() {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-10 text-center">
+      <div className="text-left"><BackButton /></div>
       <h1 className="font-display text-3xl font-semibold">{t('detective.title')}</h1>
       {q.isLoading && <div className="mt-8 space-y-4"><p className="text-ink-muted">{t('detective.loading')}</p><Skeleton className="mx-auto h-64 w-64" /></div>}
       {done && (

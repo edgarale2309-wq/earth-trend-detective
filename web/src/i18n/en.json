@@ -16,7 +16,8 @@
     "expand": "Expand menu",
     "menu": "Open menu",
     "close": "Close menu",
-    "sidebar": "Main navigation"
+    "sidebar": "Main navigation",
+    "back": "Back to Home"
   },
   "home": {
     "eyebrow": "NASA Space Apps Challenge 2026",
@@ -28,7 +29,7 @@
     "useText": "Spot drier or wetter regions, sunnier skies, changing air quality or ozone. Useful for students, teachers, planners and curious people.",
     "goalTitle": "Our goal",
     "goalText": "Make trend analysis honest and easy. We test every change with two statistical methods and say \"no clear trend\" when the data cannot tell.",
-    "howTitle": "How to explore",
+    "howTitle": "Recommended exploration path",
     "step1t": "Choose a variable",
     "step1": "Pick what to study: rain, sunlight, soil moisture, runoff or air gases.",
     "step2t": "Read the map",
@@ -39,8 +40,7 @@
     "step4": "Test your own eye in the Detective challenge before the data reveals the answer.",
     "varsTitle": "Choose a variable",
     "varsIntro": "A variable is one thing NASA measures about our planet, such as how much rain falls or how much ozone sits above us. Choose one to see how it changed over four decades and where. Start with whatever you are curious about: water, sunlight or the air we breathe.",
-    "aux": "or click a side card",
-    "swipe": "Swipe or drag to browse",
+    "aux": "Hover a side card or use the arrows to change variable. On touch screens, swipe.",
     "previous": "Previous variable",
     "next": "Next variable",
     "slide": "{{n}} of {{total}}: {{name}}",
@@ -50,7 +50,9 @@
     "challengeTitle": "Think you can read the data?",
     "challengeText": "Before the numbers appear, we show you a variable and a region. You guess: rising, falling or no clear trend? Then we reveal what 40 years of NASA data say and why. Six quick cases that train your eye for real change versus natural noise.",
     "challengeCta": "Start the challenge",
-    "footerAbout": "About this project"
+    "footerAbout": "About this project",
+    "howIntro": "Four suggested steps, in order, to get the most out of the tool: start with the big picture on the map and finish by checking whether the change is real. You can jump around, but this route is the easiest way in.",
+    "heroVideoAlt": "Animation of the Earth Trend Detective: satellites over Mexico, a trend map and a time-series chart"
   },
   "vars": {
     "precipitation": {
@@ -178,7 +180,13 @@
     "filterPeriodTip": "The years used to calculate the trend. A shorter period shows recent change. You can also drag across the chart to pick years.",
     "filterSummary": "Showing {{region}}, one dot per {{unit}}, {{start}}–{{end}}. This updates the chart, the verdict and the map colors.",
     "panelInfo": "Variable",
-    "panelCharts": "Charts"
+    "panelCharts": "Charts",
+    "viewLabel": "View",
+    "viewTip": "Switch between the colored map and a sortable list of every state. The charts stay in sync.",
+    "viewMap": "Map",
+    "viewTable": "Table",
+    "enlarge": "Enlarge charts",
+    "shrink": "Shrink charts"
   },
   "chart": {
     "title": "How it changed over time",
@@ -286,7 +294,26 @@
     "geo": "Use my location",
     "geoError": "We couldn't read your location.",
     "outside": "This tool covers Mexico. Showing the nearest grid cell.",
-    "cell": "Nearest grid cell: {{lat}}°, {{lon}}°"
+    "cell": "Nearest grid cell: {{lat}}°, {{lon}}°",
+    "myLocation": "My location",
+    "locating": "Locating you…",
+    "located": "Showing your current location.",
+    "geoDenied": "Location access was blocked. Allow it in your browser, or pick a city from the list.",
+    "summaryTitle": "Overview of this place",
+    "coords": "Coordinates",
+    "countRising": "rising",
+    "countFalling": "falling",
+    "countNone": "no clear trend",
+    "countInsufficient": "not enough data",
+    "ofSix": "of {{n}} variables",
+    "readTitle": "How to read this list",
+    "read1": "Each row is one variable, measured on a satellite or model grid, 1984–2025.",
+    "read2": "The number is the change per decade. A label says whether the change is statistically clear or not.",
+    "read3": "Select a row to open that variable in the Explorer, centred on this place.",
+    "gridTitle": "About the resolution",
+    "gridText": "Data come on a grid of about 1° (≈110 km). Your point is matched to the nearest grid cell, so values describe the surrounding area, not an exact street.",
+    "tipTitle": "Tip",
+    "tipText": "Try two very different places, such as Mérida and Hermosillo, and compare which variables change in each."
   },
   "info": {
     "title": "More information",

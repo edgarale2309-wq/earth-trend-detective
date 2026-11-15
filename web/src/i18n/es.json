@@ -16,7 +16,8 @@
     "expand": "Expandir menú",
     "menu": "Abrir menú",
     "close": "Cerrar menú",
-    "sidebar": "Navegación principal"
+    "sidebar": "Navegación principal",
+    "back": "Volver al inicio"
   },
   "home": {
     "eyebrow": "NASA Space Apps Challenge 2026",
@@ -28,7 +29,7 @@
     "useText": "Detectar regiones más secas o más húmedas, cielos más soleados, cambios en la calidad del aire o el ozono. Útil para estudiantes, docentes, planificadores y curiosos.",
     "goalTitle": "Nuestro objetivo",
     "goalText": "Hacer el análisis de tendencias honesto y fácil. Probamos cada cambio con dos métodos estadísticos y decimos \"sin tendencia clara\" cuando los datos no alcanzan.",
-    "howTitle": "Cómo explorar",
+    "howTitle": "Ruta de exploración recomendada",
     "step1t": "Elige una variable",
     "step1": "Escoge qué estudiar: lluvia, luz solar, humedad del suelo, escurrimiento o gases del aire.",
     "step2t": "Lee el mapa",
@@ -39,8 +40,7 @@
     "step4": "Pon a prueba tu ojo en el Reto detective antes de que los datos revelen la respuesta.",
     "varsTitle": "Elige una variable",
     "varsIntro": "Una variable es algo que la NASA mide de nuestro planeta, como cuánta lluvia cae o cuánto ozono hay sobre nosotros. Elige una para ver cómo cambió en cuatro décadas y dónde. Empieza por lo que más te interese: el agua, la luz del sol o el aire que respiramos.",
-    "aux": "o haz clic en una tarjeta lateral",
-    "swipe": "Desliza o arrastra para explorar",
+    "aux": "Pasa el cursor sobre una tarjeta lateral o usa las flechas para cambiar de variable. En pantallas táctiles, desliza.",
     "previous": "Variable anterior",
     "next": "Variable siguiente",
     "slide": "{{n}} de {{total}}: {{name}}",
@@ -50,7 +50,9 @@
     "challengeTitle": "¿Crees que sabes leer los datos?",
     "challengeText": "Antes de mostrar los números, te presentamos una variable y una región. Tú adivinas: ¿sube, baja o no hay tendencia clara? Después revelamos qué dicen 40 años de datos de la NASA y por qué. Seis casos rápidos que entrenan tu ojo para distinguir el cambio real del ruido natural.",
     "challengeCta": "Empezar el reto",
-    "footerAbout": "Acerca del proyecto"
+    "footerAbout": "Acerca del proyecto",
+    "howIntro": "Cuatro pasos sugeridos, en orden, para aprovechar la herramienta: empieza con el panorama en el mapa y termina comprobando si el cambio es real. Puedes saltar entre pasos, pero esta ruta es la forma más fácil de entrar.",
+    "heroVideoAlt": "Animación de Earth Trend Detective: satélites sobre México, un mapa de tendencias y una gráfica de series de tiempo"
   },
   "vars": {
     "precipitation": {
@@ -178,7 +180,13 @@
     "filterPeriodTip": "Los años con los que se calcula la tendencia. Un periodo corto muestra el cambio reciente. También puedes arrastrar sobre la gráfica para elegir años.",
     "filterSummary": "Mostrando {{region}}, un punto por {{unit}}, {{start}}–{{end}}. Esto actualiza la gráfica, el veredicto y los colores del mapa.",
     "panelInfo": "Variable",
-    "panelCharts": "Gráficas"
+    "panelCharts": "Gráficas",
+    "viewLabel": "Vista",
+    "viewTip": "Cambia entre el mapa de colores y una lista de todos los estados. Las gráficas se mantienen sincronizadas.",
+    "viewMap": "Mapa",
+    "viewTable": "Tabla",
+    "enlarge": "Ampliar gráficas",
+    "shrink": "Reducir gráficas"
   },
   "chart": {
     "title": "Cómo cambió con el tiempo",
@@ -286,7 +294,26 @@
     "geo": "Usar mi ubicación",
     "geoError": "No pudimos leer tu ubicación.",
     "outside": "Esta herramienta cubre México. Se muestra la celda más cercana.",
-    "cell": "Celda más cercana: {{lat}}°, {{lon}}°"
+    "cell": "Celda más cercana: {{lat}}°, {{lon}}°",
+    "myLocation": "Mi ubicación",
+    "locating": "Buscando tu ubicación…",
+    "located": "Mostrando tu ubicación actual.",
+    "geoDenied": "El acceso a la ubicación está bloqueado. Permítelo en tu navegador o elige una ciudad de la lista.",
+    "summaryTitle": "Resumen de este lugar",
+    "coords": "Coordenadas",
+    "countRising": "en aumento",
+    "countFalling": "en descenso",
+    "countNone": "sin tendencia clara",
+    "countInsufficient": "datos insuficientes",
+    "ofSix": "de {{n}} variables",
+    "readTitle": "Cómo leer esta lista",
+    "read1": "Cada fila es una variable, medida en una malla de satélite o modelo, de 1984 a 2025.",
+    "read2": "El número es el cambio por década. La etiqueta indica si el cambio es estadísticamente claro o no.",
+    "read3": "Selecciona una fila para abrir esa variable en el Explorador, centrada en este lugar.",
+    "gridTitle": "Sobre la resolución",
+    "gridText": "Los datos vienen en una malla de aproximadamente 1° (≈110 km). Tu punto se asigna a la celda más cercana, así que los valores describen el área alrededor, no una calle exacta.",
+    "tipTitle": "Consejo",
+    "tipText": "Prueba dos lugares muy distintos, como Mérida y Hermosillo, y compara qué variables cambian en cada uno."
   },
   "info": {
     "title": "Más información",

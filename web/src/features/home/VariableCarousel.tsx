@@ -2,7 +2,7 @@ import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { VARIABLE_IDS, VARIABLES, type VariableId } from '../../core/variables'
+import { VARIABLE_IDS, type VariableId } from '../../core/variables'
 import { VariableArt } from '../../shared/VariableArt'
 import { useExplorer } from '../explorer/store'
 
@@ -35,14 +35,14 @@ export function VariableCarousel({ active, setActive }: { active: number; setAct
   const n = VARIABLE_IDS.length
   const drag = useRef({ x: 0, down: false, moved: false })
   const hoverTimer = useRef<number | undefined>(undefined)
-  const go = useCallback((i: number) => setActive(Math.max(0, Math.min(n - 1, i))), [n, setActive])
+  const go = useCallback((i: number) => setActive(((i % n) + n) % n), [n, setActive]) // wraps around: after the last card comes the first
 
   // Track offset so the active card is centered; cards before it are collapsed.
   const offset = w / 2 - (active * (collapsed + GAP) + expanded / 2)
 
   const open = (id: VariableId) => { set({ variable: id, state: null, point: null }); nav(`/explore?v=${id}`) }
 
-  const arrow = 'flex h-11 w-11 items-center justify-center rounded-full border border-purple bg-deep-purple text-ink transition-colors duration-150 hover:bg-purple disabled:opacity-40 disabled:hover:bg-deep-purple'
+  const arrow = 'flex h-14 w-14 items-center justify-center rounded-full border border-purple bg-deep-purple text-ink transition-colors duration-150 hover:bg-purple'
 
   return (
     <div>
@@ -107,7 +107,7 @@ export function VariableCarousel({ active, setActive }: { active: number; setAct
                       <h3 className="text-2xl font-bold leading-tight text-white sm:text-[32px]">{t(`vars.${id}.name`)}</h3>
                       <p className="mt-3 line-clamp-5 text-[15px] leading-relaxed text-ink-muted sm:line-clamp-4">{t(`vars.${id}.def`)}</p>
                     </div>
-                    <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="mt-4 flex items-center justify-center">
                       <button
                         onClick={() => open(id)}
                         className="inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-semibold text-[#0B0614] transition-[filter] duration-150 hover:brightness-110"
@@ -115,7 +115,6 @@ export function VariableCarousel({ active, setActive }: { active: number; setAct
                       >
                         {t('home.analyze')} <ArrowUpRight size={16} aria-hidden />
                       </button>
-                      <span className="num text-xs text-ink-muted">{VARIABLES[id].accent}</span>
                     </div>
                   </div>
                   <div
@@ -132,7 +131,7 @@ export function VariableCarousel({ active, setActive }: { active: number; setAct
       </div>
 
       <div className="mt-2 flex items-center justify-center gap-5">
-        <button className={arrow} onClick={() => go(active - 1)} disabled={active === 0} aria-label={t('home.previous')}><ChevronLeft size={20} aria-hidden /></button>
+        <button className={arrow} onClick={() => go(active - 1)} aria-label={t('home.previous')}><ChevronLeft size={28} aria-hidden /></button>
         <div className="flex items-center" role="group" aria-label={t('nav.variables')}>
           {VARIABLE_IDS.map((id, i) => (
             <button key={id} onClick={() => go(i)} aria-label={t('home.goTo', { n: i + 1 })} aria-current={i === active} data-variable={id} className="flex h-11 items-center px-1">
@@ -143,9 +142,9 @@ export function VariableCarousel({ active, setActive }: { active: number; setAct
             </button>
           ))}
         </div>
-        <button className={arrow} onClick={() => go(active + 1)} disabled={active === n - 1} aria-label={t('home.next')}><ChevronRight size={20} aria-hidden /></button>
+        <button className={arrow} onClick={() => go(active + 1)} aria-label={t('home.next')}><ChevronRight size={28} aria-hidden /></button>
       </div>
-      <p className="mt-1 text-center text-xs text-ink-muted"><span className="num">{active + 1} / {n}</span> · {t('home.aux')} · {t('home.swipe')}</p>
+      <p className="mx-auto mt-2 max-w-xl px-4 text-center text-sm leading-relaxed text-ink-muted"><span className="num">{active + 1} / {n}</span> · {t('home.aux')}</p>
     </div>
   )
 }

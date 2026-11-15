@@ -1,21 +1,10 @@
-import { BookOpen, House, Languages, MapPin, Menu, PanelLeftClose, PanelLeftOpen, Search, Share2, X } from 'lucide-react'
+import { BookOpen, House, Languages, MapPin, Menu, Search, Share2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { VARIABLE_IDS, VARIABLES } from '../core/variables'
 import { useExplorer } from '../features/explorer/store'
 import { ICONS } from './VariableImage'
-
-function usePersistentCollapsed(): [boolean, (v: boolean) => void] {
-  const [c, setC] = useState(() => {
-    try { return localStorage.getItem('sidebar') === 'collapsed' } catch { return false }
-  })
-  const set = (v: boolean) => {
-    setC(v)
-    try { localStorage.setItem('sidebar', v ? 'collapsed' : 'open') } catch { /* ignore */ }
-  }
-  return [c, set]
-}
 
 function ModeToggle() {
   const { t } = useTranslation()
@@ -66,12 +55,13 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
   )
 }
 
-function Sidebar({ collapsed, setCollapsed, open, close }: { collapsed: boolean; setCollapsed: (v: boolean) => void; open: boolean; close: () => void }) {
+function Sidebar({ open, close }: { open: boolean; close: () => void }) {
   const { t, i18n } = useTranslation()
   const nav = useNavigate()
   const loc = useLocation()
   const { variable, set } = useExplorer()
-  const rail = collapsed && !open // drawer on mobile is always full width
+  const [hover, setHover] = useState(false)
+  const rail = !hover && !open // desktop: a slim rail that unfolds on hover/focus; the mobile drawer is always full width
   const row = (active: boolean) =>
     `group flex h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-150 ${rail ? 'justify-center px-0' : ''} ${
       active ? 'bg-deep-purple font-medium text-ink' : 'text-ink-muted hover:bg-deep-purple hover:text-ink'}`
@@ -87,10 +77,14 @@ function Sidebar({ collapsed, setCollapsed, open, close }: { collapsed: boolean;
   return (
     <>
       {open && <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={close} aria-hidden />}
+      {/* the spacer keeps the page layout fixed; the aside floats over the content when it unfolds */}
+      <div className="hidden w-[68px] shrink-0 lg:block" aria-hidden />
       <aside
         aria-label={t('nav.sidebar')}
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-purple bg-surface transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:translate-x-0
-          ${open ? 'w-72 translate-x-0' : '-translate-x-full w-72'} ${collapsed ? 'lg:w-[68px]' : 'lg:w-64'}`}
+        onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+        onFocus={() => setHover(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHover(false) }}
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden border-r border-purple bg-surface transition-[width,transform,box-shadow] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] lg:translate-x-0
+          ${open ? 'w-72 translate-x-0' : '-translate-x-full w-72'} ${hover ? 'lg:w-64 lg:shadow-[8px_0_32px_rgba(0,0,0,0.5)]' : 'lg:w-[68px]'}`}
       >
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-purple px-3">
           {!rail && <span className="px-1 font-display text-sm font-semibold text-ink-muted">{t('app.name')}</span>}
@@ -128,11 +122,6 @@ function Sidebar({ collapsed, setCollapsed, open, close }: { collapsed: boolean;
                 className={`h-11 min-w-11 rounded-lg ${i18n.language === l ? 'bg-deep-purple font-semibold' : 'text-ink-muted'}`}>{l.toUpperCase()}</button>
             ))}
           </div>
-          <button onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
-            title={collapsed ? t('nav.expand') : t('nav.collapse')}
-            className={`hidden h-11 w-full items-center gap-3 rounded-lg px-3 text-sm text-ink-muted hover:bg-deep-purple hover:text-ink lg:flex ${collapsed ? 'justify-center px-0' : ''}`}>
-            {collapsed ? <PanelLeftOpen size={20} aria-hidden /> : <><PanelLeftClose size={20} aria-hidden /><span>{t('nav.collapse')}</span></>}
-          </button>
         </div>
       </aside>
     </>
@@ -140,13 +129,12 @@ function Sidebar({ collapsed, setCollapsed, open, close }: { collapsed: boolean;
 }
 
 export default function AppShell() {
-  const [collapsed, setCollapsed] = usePersistentCollapsed()
   const [open, setOpen] = useState(false)
   const loc = useLocation()
   useEffect(() => { setOpen(false) }, [loc.pathname])
   return (
     <div className="flex min-h-screen">
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} open={open} close={() => setOpen(false)} />
+      <Sidebar open={open} close={() => setOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar onMenu={() => setOpen(true)} />
         <main id="main" className="min-w-0 flex-1"><Outlet /></main>

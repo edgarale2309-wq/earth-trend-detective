@@ -28,8 +28,8 @@ function Legend() {
   )
 }
 
-export function SeriesPanel({ variable, data, loading, error, refetch, placeLabel, name }: {
-  variable: VariableId; data?: SeriesResponse; loading: boolean; error: unknown; refetch: () => void; placeLabel: string; name: string
+export function SeriesPanel({ variable, data, loading, error, refetch, placeLabel, name, chartHeight = 300 }: {
+  chartHeight?: number; variable: VariableId; data?: SeriesResponse; loading: boolean; error: unknown; refetch: () => void; placeLabel: string; name: string
 }) {
   const { t } = useTranslation()
   const { deseasonalize, resolution, start, end, set } = useExplorer()
@@ -47,7 +47,7 @@ export function SeriesPanel({ variable, data, loading, error, refetch, placeLabe
     `h-9 rounded-lg px-3 text-sm transition-colors duration-150 ${on ? 'bg-purple text-white' : 'text-ink-muted hover:bg-deep-purple hover:text-ink'}`
 
   return (
-    <section aria-labelledby="ts-h" className="rounded-2xl border border-purple bg-surface p-4 lg:p-5">
+    <section aria-labelledby="ts-h" className="min-w-0 rounded-2xl border border-purple bg-surface p-4 lg:p-5">
       <h2 id="ts-h" className="section-label">{t('chart.title')}</h2>
       <p className="mt-2 text-sm leading-snug text-ink">
         {t('chart.subtitle', {
@@ -66,12 +66,12 @@ export function SeriesPanel({ variable, data, loading, error, refetch, placeLabe
         </Tip>
       </div>
 
-      <div className="mt-3 min-h-[300px]">
+      <div className="mt-3" style={{ minHeight: chartHeight }}>
         {error != null && !data ? <ErrorState error={error} onRetry={refetch} />
           : data ? (
             <Suspense fallback={<Skeleton className="h-[300px]" />}>
               <div className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
-                <TimeSeriesChart variable={variable} data={data} resolution={resolution} revision={`${variable}-${start}-${end}-${deseasonalize}-${resolution}-${data.point?.state ?? ''}`} onRange={onRange} />
+                <TimeSeriesChart variable={variable} data={data} resolution={resolution} height={chartHeight} revision={`${variable}-${start}-${end}-${deseasonalize}-${resolution}-${data.point?.state ?? ''}`} onRange={onRange} />
               </div>
             </Suspense>
           ) : <Skeleton className="h-[300px]" />}

@@ -9,7 +9,8 @@ const Plot = createPlotlyComponent(Plotly)
 const INK = '#F4ECF7'
 const MUTED = '#C4B2CF'
 
-export default function TimeSeriesChart({ variable, data, resolution, revision, onRange }: {
+export default function TimeSeriesChart({ variable, data, resolution, revision, onRange, height = 300 }: {
+  height?: number
   variable: VariableId; data: SeriesResponse; resolution: 'annual' | 'monthly'; revision: string
   onRange: (startYear: number, endYear: number) => void
 }) {
@@ -54,7 +55,7 @@ export default function TimeSeriesChart({ variable, data, resolution, revision, 
       <Plot
         data={traces} revision={revision as unknown as number}
         layout={{
-          autosize: true, height: 300, margin: { l: 52, r: 12, t: 8, b: 36 },
+          autosize: true, height, margin: { l: 52, r: 12, t: 8, b: 36 },
           paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
           font: { family: 'Inter, sans-serif', size: 12, color: MUTED },
           dragmode: 'select', selectdirection: 'h', hovermode: 'closest', hoverdistance: 40, uirevision: revision,

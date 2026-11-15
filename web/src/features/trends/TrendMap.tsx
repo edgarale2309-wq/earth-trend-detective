@@ -57,7 +57,8 @@ function scaleMax(rows: StateRow[]): number {
   return a.length ? Math.max(a[Math.floor(a.length * 0.95)] ?? a[a.length - 1], 1e-9) : 1
 }
 
-export function TrendMap({ variable, region, data, geo, loading, error, refetch, start, end, footer, left, right }: {
+export function TrendMap({ variable, region, data, geo, loading, error, refetch, start, end, footer, left, right, asTable }: {
+  asTable: boolean
   variable: VariableId; region: RegionId; data?: TrendsResponse; geo?: GeoJSON.FeatureCollection
   loading: boolean; error: unknown; refetch: () => void; start: number; end: number; footer: React.ReactNode
   left: DockedPanel; right: DockedPanel
@@ -68,7 +69,6 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const ready = useRef(false)
-  const [asTable, setAsTable] = useState(false)
   const [showNote, setShowNote] = useState(false)
   const selected = useExplorer((s) => s.state)
   const set = useExplorer((s) => s.set)
@@ -197,7 +197,7 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
   const name = t(`vars.${variable}.name`)
 
   return (
-    <section className="flex h-full min-h-[520px] flex-col rounded-2xl border border-purple bg-surface p-3 sm:p-4" aria-labelledby="map-h">
+    <section className="flex h-full min-h-[520px] flex-col rounded-2xl border border-purple/60 bg-transparent p-3 sm:p-4" aria-labelledby="map-h">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative flex items-center gap-1.5">
           <h2 id="map-h" className="section-label">{t('explorer.map')}</h2>
@@ -226,7 +226,7 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
         {loading && <p role="status" className="absolute bottom-2 right-2 z-10 rounded-lg bg-deep-purple px-2 py-1 text-xs">{t('explorer.analyzing', { n: data?.n_cells ?? '…' })}</p>}
         {!loading && !asTable && <p className="pointer-events-none absolute left-2 top-2 z-10 rounded-lg bg-background/80 px-2 py-1 text-xs text-ink-muted">{t('explorer.hoverHint')}</p>}
         {asTable && (
-          <div className="absolute inset-0 overflow-auto bg-surface p-2">
+          <div className="absolute inset-0 overflow-auto bg-surface py-2" style={{ paddingLeft: `calc(${left.open ? left.width : '0px'} + 3rem)`, paddingRight: `calc(${right.open ? right.width : '0px'} + 3rem)` }}>
             <table className="w-full text-left text-sm">
               <thead className="text-xs text-ink-muted"><tr><th className="p-2">{t('explorer.tableState')}</th><th className="p-2">{t('explorer.tableChange')}</th><th className="p-2">p (FDR)</th><th className="p-2" /></tr></thead>
               <tbody>
@@ -246,15 +246,12 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
         <FloatingPanel side="right" panel={right} />
         {error != null && !data && <div className="absolute inset-0 z-20 grid place-items-center bg-background p-4"><ErrorState error={error} onRetry={refetch} /></div>}
       </div>
-      <div className="mt-2 flex justify-end">
-        <button onClick={() => setAsTable((v) => !v)} className="h-9 px-2 text-xs text-ink-muted underline underline-offset-4 hover:text-ink">{asTable ? t('explorer.mapChart') : t('explorer.mapTable')}</button>
-      </div>
       {footer}
     </section>
   )
 }
 
-export interface DockedPanel { open: boolean; onToggle: () => void; label: string; hideLabel: string; showLabel: string; id: string; children: React.ReactNode }
+export interface DockedPanel { width: string; open: boolean; onToggle: () => void; label: string; hideLabel: string; showLabel: string; id: string; children: React.ReactNode }
 
 /** A card floating over the map with a pull-tab fixed to its inner edge. Closing slides the card away
  *  but leaves the tab docked at the map border, so the control always lives on the panel it moves. */
@@ -265,7 +262,7 @@ function FloatingPanel({ side, panel }: { side: 'left' | 'right'; panel: DockedP
     <div
       className={`pointer-events-none absolute top-2 z-30 flex max-h-[calc(100%-1rem)] flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isLeft ? 'left-2' : 'right-2'}`}
       style={{
-        width: isLeft ? 'min(312px, 80vw)' : 'min(400px, 84vw)',
+        width: panel.width,
         transform: panel.open ? 'translateX(0)' : `translateX(${isLeft ? 'calc(-100% - 8px)' : 'calc(100% + 8px)'})`,
       }}
     >

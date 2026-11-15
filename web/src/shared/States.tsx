@@ -1,4 +1,5 @@
-import { useId } from 'react'
+import { useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '../core/api'
@@ -44,16 +45,27 @@ export function GlossaryTip({ term, children }: { term: 'p' | 'sen' | 'anomaly' 
   )
 }
 
-/** Hover/focus tooltip for short plain-language explanations. */
+/** Hover/focus tooltip for short plain-language explanations. Rendered in a portal with fixed positioning,
+ *  so scrollable or overflow-hidden parents (the floating panels) never clip it. */
 export function Tip({ text, children }: { text: string; children: React.ReactNode }) {
   const id = useId()
+  const ref = useRef<HTMLSpanElement>(null)
+  const [pos, setPos] = useState<{ x: number; y: number; below: boolean } | null>(null)
+  const show = () => {
+    const r = ref.current?.getBoundingClientRect()
+    if (!r) return
+    const half = 120 // half of the 15rem tooltip width
+    setPos({ x: Math.min(Math.max(r.left + r.width / 2, half + 8), window.innerWidth - half - 8), y: r.top < 120 ? r.bottom : r.top, below: r.top < 120 })
+  }
   return (
-    <span className="group relative inline-flex">
+    <span ref={ref} className="relative inline-flex" onMouseEnter={show} onMouseLeave={() => setPos(null)} onFocus={show} onBlur={() => setPos(null)}>
       <span aria-describedby={id} tabIndex={0} className="inline-flex rounded outline-offset-2">{children}</span>
-      <span
-        id={id} role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 hidden w-60 -translate-x-1/2 rounded-xl border border-purple bg-deep-purple p-2.5 text-left text-xs font-normal normal-case leading-relaxed tracking-normal text-ink group-focus-within:block group-hover:block"
-      >{text}</span>
+      {pos && createPortal(
+        <span
+          id={id} role="tooltip"
+          style={{ left: pos.x, top: pos.y, transform: `translate(-50%, ${pos.below ? '8px' : 'calc(-100% - 8px)'})` }}
+          className="pointer-events-none fixed z-[100] w-60 rounded-xl border border-purple bg-deep-purple p-2.5 text-left text-xs font-normal normal-case leading-relaxed tracking-normal text-ink shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
+        >{text}</span>, document.body)}
     </span>
   )
 }

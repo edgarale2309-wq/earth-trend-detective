@@ -1,3 +1,4 @@
+import { Maximize2, Minimize2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
@@ -58,6 +59,22 @@ export default function ExplorerPage() {
   const w = typeof window === 'undefined' ? 1440 : window.innerWidth
   const [left, setLeft] = useState(w >= 1280)
   const [right, setRight] = useState(w >= 1280)
+  const [asTable, setAsTable] = useState(false)
+  const [big, setBig] = useState(false)
+  const leftBefore = useRef(left)
+
+  // Table view: only the table and the chart cards stay on screen, so the variable card folds away.
+  const onView = (table: boolean) => {
+    if (table === asTable) return
+    if (table) { leftBefore.current = left; setLeft(false); setRight(true); setBig(false) } else setLeft(leftBefore.current)
+    setAsTable(table)
+  }
+  const toggleBig = () => { setBig((v) => !v); setLeft(false); setRight(true) }
+  const LEFT_W = 'min(312px, 80vw)'
+  // Charts sit side by side; they share the map width with the variable card when both are open.
+  const rightW = asTable ? 'min(400px, 84vw)'
+    : big ? 'calc(100% - 4.5rem)'
+    : `min(880px, calc(100% - ${left ? '312px' : '0px'} - 5rem))`
 
   if (variable === 'home') return null
 
@@ -79,24 +96,35 @@ export default function ExplorerPage() {
           <TrendMap
             variable={variable} region={region} data={trends.data} geo={geo.data} loading={trends.isFetching || geo.isFetching} error={trends.error ?? geo.error}
             refetch={() => { trends.refetch(); geo.refetch() }} start={start} end={end}
-            footer={<FilterBar />}
+            asTable={asTable}
+            footer={<FilterBar asTable={asTable} onView={onView} />}
             left={{
-              open: left, onToggle: () => setLeft((v) => !v), id: 'panel-left', label: t('explorer.panelInfo'),
+              width: LEFT_W, open: left, onToggle: () => setLeft((v) => !v), id: 'panel-left', label: t('explorer.panelInfo'),
               hideLabel: t('explorer.hideInfo'), showLabel: t('explorer.showInfo'),
               children: <VariablePanel variable={variable} imageState={imageState} dataStatus={status} />,
             }}
             right={{
-              open: right, onToggle: () => setRight((v) => !v), id: 'panel-right', label: t('explorer.panelCharts'),
+              width: rightW, open: right, onToggle: () => setRight((v) => !v), id: 'panel-right', label: t('explorer.panelCharts'),
               hideLabel: t('explorer.hideCharts'), showLabel: t('explorer.showCharts'),
               children: (
-                <div className="flex flex-col gap-3">
-                  {stateName && (
-                    <button onClick={() => set({ state: null, point: null })} className="h-9 self-start rounded-full border border-input-border bg-surface px-3 text-xs text-ink hover:bg-deep-purple">
-                      {t('explorer.selectedState', { name: stateName })} · {t('explorer.clearSelection')}
-                    </button>
-                  )}
-                  <SeriesPanel variable={variable} data={series.data} loading={series.isFetching} error={series.error} refetch={() => series.refetch()} placeLabel={placeLabel} name={name} />
-                  {stats ? <VerdictPanel stats={stats} unit={series.data!.unit} name={name} mode={mode} /> : <Skeleton className="h-52" />}
+                <div className="@container flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {stateName && (
+                      <button onClick={() => set({ state: null, point: null })} className="h-9 rounded-full border border-input-border bg-surface px-3 text-xs text-ink hover:bg-deep-purple">
+                        {t('explorer.selectedState', { name: stateName })} · {t('explorer.clearSelection')}
+                      </button>
+                    )}
+                    {!asTable && (
+                      <button onClick={toggleBig} aria-pressed={big} title={big ? t('explorer.shrink') : t('explorer.enlarge')}
+                        className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-full border border-input-border bg-surface px-3 text-xs text-ink hover:bg-deep-purple">
+                        {big ? <Minimize2 size={14} aria-hidden /> : <Maximize2 size={14} aria-hidden />}{big ? t('explorer.shrink') : t('explorer.enlarge')}
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid items-start gap-3 @2xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+                    <SeriesPanel variable={variable} data={series.data} loading={series.isFetching} error={series.error} refetch={() => series.refetch()} placeLabel={placeLabel} name={name} chartHeight={big ? 460 : 300} />
+                    {stats ? <VerdictPanel stats={stats} unit={series.data!.unit} name={name} mode={mode} /> : <Skeleton className="h-52" />}
+                  </div>
                 </div>
               ),
             }}

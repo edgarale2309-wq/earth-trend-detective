@@ -1,4 +1,4 @@
-import { CalendarRange, Info, MapPin, Rows3 } from 'lucide-react'
+import { CalendarRange, Info, Map as MapIcon, MapPin, Rows3, Table2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { REGION_IDS } from '../../core/variables'
@@ -45,12 +45,12 @@ function PeriodSlider() {
 }
 
 /** Compact, centered control dock under the map. Each control says what it changes; a summary line closes the loop. */
-export function FilterBar() {
+export function FilterBar({ asTable, onView }: { asTable: boolean; onView: (table: boolean) => void }) {
   const { t } = useTranslation()
   const { region, resolution, start, end, set } = useExplorer()
   return (
-    <div className="mx-auto mt-1 w-full max-w-3xl">
-      <div role="group" aria-label={t('explorer.filters')} className="grid gap-4 rounded-2xl border border-purple bg-background/60 px-4 py-3 sm:grid-cols-[1fr_auto_1.1fr] sm:items-start">
+    <div className="mx-auto mt-1 w-full max-w-5xl">
+      <div role="group" aria-label={t('explorer.filters')} className="grid gap-4 px-2 py-2 sm:grid-cols-2 sm:items-start lg:grid-cols-[1fr_auto_auto_1.2fr]">
         <div>
           <Label icon={MapPin} text={t('explorer.filterRegion')} tip={t('explorer.filterRegionTip')} />
           <select className="h-9 w-full rounded-lg border border-input-border bg-surface px-2 text-sm" value={region}
@@ -65,6 +65,17 @@ export function FilterBar() {
               <button key={r} aria-pressed={resolution === r} onClick={() => set({ resolution: r })}
                 className={`h-8 rounded-md px-3 text-sm transition-colors duration-150 ${resolution === r ? 'bg-purple text-white' : 'text-ink-muted hover:bg-deep-purple hover:text-ink'}`}>
                 {t(`explorer.${r}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label icon={asTable ? Table2 : MapIcon} text={t('explorer.viewLabel')} tip={t('explorer.viewTip')} />
+          <div role="group" aria-label={t('explorer.viewLabel')} className="flex rounded-lg border border-input-border p-0.5">
+            {([false, true] as const).map((tb) => (
+              <button key={String(tb)} aria-pressed={asTable === tb} onClick={() => onView(tb)}
+                className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm transition-colors duration-150 ${asTable === tb ? 'bg-purple text-white' : 'text-ink-muted hover:bg-deep-purple hover:text-ink'}`}>
+                {tb ? <Table2 size={14} aria-hidden /> : <MapIcon size={14} aria-hidden />}{t(tb ? 'explorer.viewTable' : 'explorer.viewMap')}
               </button>
             ))}
           </div>

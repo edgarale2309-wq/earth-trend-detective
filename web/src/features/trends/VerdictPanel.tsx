@@ -34,7 +34,7 @@ export function VerdictPanel({ stats, unit, name, mode }: { stats: Stats; unit: 
     : t('state.sumInsufficient')
 
   return (
-    <section aria-labelledby="sig-h" className="rounded-2xl border border-purple bg-surface p-4 lg:p-6">
+    <section aria-labelledby="sig-h" className="min-w-0 rounded-2xl border border-purple bg-surface p-4 lg:p-5">
       <div className="flex items-center justify-between gap-2">
         <h2 id="sig-h" className="section-label">{t('explorer.significance')}</h2>
         <SignificanceBadge state={stats.state} />
