@@ -38,6 +38,8 @@ The cached datasets (`api/data/*.zarr`, about 4 MB) are committed, so the app wo
 Real ingestion for GLDAS and OMI is in `api/scripts/preprocess_earthdata.py`. It is written but **has not been run**: it needs Earthdata credentials in `api/.env`.
 Once its output replaces a demo file, the badge disappears (the dataset's `status` attribute becomes `nasa`).
 
+The map shows Mexican states (Natural Earth admin-1, `api/data/mexico_states.geojson`, rebuilt with `python scripts/build_states.py`). Each state is the area-weighted mean of the 1° grid cells whose centre falls inside it; very small states use their nearest cell. FDR correction runs across states.
+
 Refresh the real data: `python scripts/fetch_power.py` (558 grid points over Mexico at 1°, no account needed, resumable).
 
 ## Method
@@ -49,7 +51,7 @@ Code: `api/app/services/trend_service.py` (7 tests with synthetic series).
 
 ## API
 
-`GET /api/v1/health` · `GET /variables` · `POST /trends` · `GET /series` · `GET /place` · `GET /clues`
+`GET /api/v1/health` · `GET /variables` · `POST /trends` (per-state results) · `GET /series` (region, `state=` or `lat/lon`) · `GET /geo/states` · `GET /place` · `GET /clues`
 
 ## Quality gates
 
@@ -60,8 +62,8 @@ cd web && npm run check:accent && npm run lint && npm test && npm run build
 
 ## Images
 
-Variable and home illustrations are not included yet. Drop WebP files in `web/public/images/` following `docs/UX.md` section 4
-(`variables/<id>/<idle|rising|falling|no_trend|insufficient>.webp`, `home/earth.webp`). Until then the app draws an icon fallback.
+Variable cards use built-in animated SVG illustrations. Optional raster illustrations can override them: Drop WebP files in `web/public/images/` following `docs/UX.md` section 4
+(`variables/<id>/<idle|rising|falling|no_trend|insufficient>.webp`, `home/earth.webp`). If a file is missing the SVG illustration is used.
 AI-generated images must carry the "AI-generated" label and be declared at submission.
 
 ## Known gaps

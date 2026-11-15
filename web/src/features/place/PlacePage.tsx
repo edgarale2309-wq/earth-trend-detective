@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../core/api'
 import { VARIABLES, type VariableId } from '../../core/variables'
-import { AppBar } from '../../shared/AppBar'
 import { DemoBadge, ErrorState, Skeleton } from '../../shared/States'
 import { ICONS } from '../../shared/VariableImage'
 import { fmt } from '../explorer/hooks'
@@ -41,14 +40,13 @@ export default function PlacePage() {
   }
 
   const open = (v: VariableId, c: { lat: number; lon: number }) => {
-    set({ variable: v, region: 'mexico', point: { lat: c.lat, lon: c.lon } })
+    set({ variable: v, region: 'mexico', point: { lat: c.lat, lon: c.lon }, state: null })
     nav(`/explore?v=${v}&r=mexico&lat=${c.lat}&lon=${c.lon}`)
   }
 
   return (
-    <div className="min-h-screen">
-      <AppBar back />
-      <main id="main" className="mx-auto max-w-2xl px-4 py-10">
+    <div>
+      <div className="mx-auto max-w-2xl px-4 py-10">
         <h1 className="font-display text-3xl font-semibold">{t('place.title')}</h1>
         <p className="mt-2 text-ink-muted">{t('place.subtitle')}</p>
         <div className="mt-6 flex flex-wrap gap-3">
@@ -90,7 +88,7 @@ export default function PlacePage() {
             </>
           )}
         </div>
-      </main>
+      </div>
     </div>
   )
 }

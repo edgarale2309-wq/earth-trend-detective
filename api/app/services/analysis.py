@@ -5,8 +5,10 @@ from functools import lru_cache
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 from app.adapters.zarr_repository import ZarrRepository
+from app.domain import states as st
 from app.domain.catalog import REGIONS, VARIABLES
 from app.services import trend_service as ts
 
@@ -17,21 +19,26 @@ class AnalysisError(Exception):
     pass
 
 
-def _slice(variable: str, region: str, start: int, end: int):
+def _load(variable: str):
     if variable not in VARIABLES:
         raise AnalysisError(f"Unknown variable '{variable}'")
-    if region not in REGIONS:
-        raise AnalysisError(f"Unknown region '{region}'")
     try:
         ds = repo.load(variable)
     except FileNotFoundError as e:
         raise AnalysisError(f"No data cached for '{variable}'. Run the ingestion scripts.") from e
+    return ds, ds.attrs.get("status", VARIABLES[variable]["status"])
+
+
+def _slice(variable: str, region: str, start: int, end: int):
+    if region not in REGIONS:
+        raise AnalysisError(f"Unknown region '{region}'")
+    ds, status = _load(variable)
     la0, la1, lo0, lo1 = REGIONS[region]["bbox"]
     da = ds["value"].sel(lat=slice(la0, la1), lon=slice(lo0, lo1))
     da = da.sel(time=slice(f"{start}-01-01", f"{end}-12-31"))
     if da.time.size == 0 or da.lat.size == 0:
         raise AnalysisError("The selected region or period has no data")
-    return da, ds.attrs.get("status", VARIABLES[variable]["status"])
+    return da, status
 
 
 def regional_series(da) -> pd.Series:
@@ -40,42 +47,53 @@ def regional_series(da) -> pd.Series:
     return pd.Series(m.values, index=pd.DatetimeIndex(da.time.values))
 
 
+def state_series(variable: str, state_id: str, start: int, end: int) -> tuple[pd.Series, str]:
+    ds, status = _load(variable)
+    mem = st.membership()
+    if state_id not in mem:
+        raise AnalysisError(f"Unknown state '{state_id}'")
+    ii, jj = mem[state_id]
+    da = ds["value"].sel(time=slice(f"{start}-01-01", f"{end}-12-31"))
+    vals = da.values[:, ii, jj]
+    w = np.cos(np.deg2rad(da.lat.values[ii]))[None, :] * np.isfinite(vals)
+    mean = np.nansum(np.nan_to_num(vals) * w, axis=1) / np.where(w.sum(axis=1) == 0, np.nan, w.sum(axis=1))
+    return pd.Series(mean, index=pd.DatetimeIndex(da.time.values)), status
+
+
 @lru_cache(maxsize=256)
 def trends(variable: str, region: str, start: int, end: int, resolution: str) -> dict:
     da, status = _slice(variable, region, start, end)
-    times = pd.DatetimeIndex(da.time.values)
-    slope, pct, p, p_fdr, state = ts.cell_trends(da.values, times, resolution)
-    cells = []
-    for i, la in enumerate(da.lat.values):
-        for j, lo in enumerate(da.lon.values):
-            if state[i, j] == "nodata":
-                continue
-            cells.append({
-                "lat": float(la), "lon": float(lo), "state": str(state[i, j]),
-                "slope": None if np.isnan(slope[i, j]) else round(float(slope[i, j]), 5),
-                "pct": None if np.isnan(pct[i, j]) else round(float(pct[i, j]), 3),
-                "p": None if np.isnan(p_fdr[i, j]) else round(float(p_fdr[i, j]), 5),
-            })
-    series = regional_series(da)
-    summary = ts.analyze_series(series, resolution).to_dict()
+    summary = ts.analyze_series(regional_series(da), resolution)
+    names = st.names()
+    results = {sid: ts.analyze_series(state_series(variable, sid, start, end)[0], resolution) for sid in names}
+    ts.fdr_classify(results)
+    rows = [{
+        "id": sid, "name": names[sid], "state": r.state, "n_cells": len(st.membership()[sid][0]),
+        "slope": None if r.sen_slope_per_decade is None else round(r.sen_slope_per_decade, 5),
+        "pct": None if r.pct_per_decade is None else round(r.pct_per_decade, 3),
+        "p": None if r.p_value is None else round(r.p_value, 5),
+    } for sid, r in results.items()]
     return {
         "variable": variable, "region": region, "start": start, "end": end, "resolution": resolution,
         "unit": VARIABLES[variable]["unit"], "source": VARIABLES[variable]["source"], "data_status": status,
-        "step": 1.0, "n_cells": len(cells), "summary": summary, "cells": cells,
-        "fdr_significant": int(sum(c["state"] in ("rising", "falling") for c in cells)),
+        "n_cells": int(da.lat.size * da.lon.size), "summary": summary.to_dict(), "states": rows,
+        "fdr_significant": sum(r["state"] in ("rising", "falling") for r in rows),
     }
 
 
 def series(variable: str, region: str, start: int, end: int, resolution: str, deseasonalize: bool,
-           lat: float | None = None, lon: float | None = None) -> dict:
-    da, status = _slice(variable, region, start, end)
-    if lat is not None and lon is not None:
+           lat: float | None = None, lon: float | None = None, state: str | None = None) -> dict:
+    da, status = _slice(variable, "mexico" if (lat is not None or state) else region, start, end)
+    place = None
+    if state:
+        s, _ = state_series(variable, state, start, end)
+        place = {"state": state, "name": st.names().get(state, state)}
+    elif lat is not None and lon is not None:
         pt = da.sel(lat=lat, lon=lon, method="nearest")
         s = pd.Series(pt.values, index=pd.DatetimeIndex(pt.time.values))
         place = {"lat": float(pt.lat), "lon": float(pt.lon)}
     else:
         s = regional_series(da)
-        place = None
     result = ts.analyze_series(s, resolution)
     if deseasonalize:
         y, _ = ts.to_resolution(s, resolution)
@@ -88,17 +106,18 @@ def series(variable: str, region: str, start: int, end: int, resolution: str, de
     fit = None
     if len(y) >= 4:
         x = np.arange(len(y), dtype=float)
-        from scipy import stats
         lr = stats.linregress(x, y.values)
         tc = stats.t.ppf(0.975, len(y) - 2)
         yhat = lr.intercept + lr.slope * x
-        half = tc * np.sqrt(lr.stderr**2 * (x - x.mean()) ** 2 + (np.sum((y.values - yhat) ** 2) / (len(y) - 2)) / len(y))
+        resid = np.sum((y.values - yhat) ** 2) / (len(y) - 2)
+        half = tc * np.sqrt(lr.stderr**2 * (x - x.mean()) ** 2 + resid / len(y))
         fit = {"trend": [round(float(v), 5) for v in yhat],
                "ci_low": [round(float(v), 5) for v in yhat - half],
                "ci_high": [round(float(v), 5) for v in yhat + half]}
     return {
         "variable": variable, "unit": VARIABLES[variable]["unit"], "source": VARIABLES[variable]["source"],
         "data_status": status, "point": place, "resolution": resolution, "deseasonalized": deseasonalize,
+        "mean": round(float(np.nanmean(s.values)), 5),
         "dates": [d.strftime("%Y-%m-%d") for d in y.index],
         "values": [round(float(v), 5) for v in y.values], "fit": fit, "stats": result.to_dict(),
     }
@@ -130,5 +149,6 @@ def clue(variable: str, start: int = 1984, end: int = 2025) -> dict:
             continue
         r = ts.analyze_series(regional_series(da), "annual")
         out.append({"region": rid, "stats": r.to_dict()})
-    ranked = sorted([o for o in out if o["stats"]["pct_per_decade"] is not None], key=lambda o: o["stats"]["pct_per_decade"])
+    ranked = sorted([o for o in out if o["stats"]["pct_per_decade"] is not None],
+                    key=lambda o: o["stats"]["pct_per_decade"])
     return {"variable": variable, "regions": out, "opposite": [ranked[0], ranked[-1]] if len(ranked) >= 2 else ranked}

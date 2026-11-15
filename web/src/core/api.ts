@@ -21,22 +21,23 @@ export type Stats = z.infer<typeof Stats>
 
 const DataStatus = z.enum(['nasa', 'synthetic_demo'])
 
-const Cell = z.object({
-  lat: z.number(), lon: z.number(),
+const StateRow = z.object({
+  id: z.string(), name: z.string(), n_cells: z.number(),
   state: z.enum(['rising', 'falling', 'no_trend', 'insufficient']),
   slope: z.number().nullable(), pct: z.number().nullable(), p: z.number().nullable(),
 })
-export type Cell = z.infer<typeof Cell>
+export type StateRow = z.infer<typeof StateRow>
 
 const TrendsResponse = z.object({
-  unit: z.string(), source: z.string(), data_status: DataStatus, step: z.number(),
-  n_cells: z.number(), fdr_significant: z.number(), summary: Stats, cells: z.array(Cell),
+  unit: z.string(), source: z.string(), data_status: DataStatus,
+  n_cells: z.number(), fdr_significant: z.number(), summary: Stats, states: z.array(StateRow),
 })
 export type TrendsResponse = z.infer<typeof TrendsResponse>
 
 const SeriesResponse = z.object({
   unit: z.string(), source: z.string(), data_status: DataStatus, deseasonalized: z.boolean(),
-  point: z.object({ lat: z.number(), lon: z.number() }).nullable(),
+  point: z.object({ lat: z.number().optional(), lon: z.number().optional(), state: z.string().optional(), name: z.string().optional() }).nullable(),
+  mean: z.number(),
   dates: z.array(z.string()), values: z.array(z.number()),
   fit: z.object({ trend: z.array(z.number()), ci_low: z.array(z.number()), ci_high: z.array(z.number()) }).nullable(),
   stats: Stats,
@@ -70,7 +71,12 @@ async function call<T>(schema: z.ZodType<T>, path: string, init?: RequestInit): 
     try { detail = (await res.json()).detail ?? detail } catch { /* ignore */ }
     throw new ApiError(String(detail))
   }
-  return schema.parse(await res.json())
+  const parsed = schema.safeParse(await res.json())
+  if (!parsed.success) {
+    console.error('[api] unexpected response from', path, parsed.error.issues.slice(0, 3))
+    throw new ApiError('unexpected response')
+  }
+  return parsed.data
 }
 
 export interface Query { variable: VariableId; region: RegionId; start: number; end: number; resolution: 'annual' | 'monthly' }
@@ -78,14 +84,16 @@ export interface Query { variable: VariableId; region: RegionId; start: number; 
 export const api = {
   trends: (q: Query) =>
     call(TrendsResponse, 'trends', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(q) }),
-  series: (q: Query, deseasonalize: boolean, pt?: { lat: number; lon: number } | null) => {
+  series: (q: Query, deseasonalize: boolean, sel: { point?: { lat: number; lon: number } | null; state?: string | null } = {}) => {
     const p = new URLSearchParams({
       var: q.variable, region: q.region, start: String(q.start), end: String(q.end),
       resolution: q.resolution, deseasonalize: String(deseasonalize),
     })
-    if (pt) { p.set('lat', String(pt.lat)); p.set('lon', String(pt.lon)) }
+    if (sel.state) p.set('state', sel.state)
+    else if (sel.point) { p.set('lat', String(sel.point.lat)); p.set('lon', String(sel.point.lon)) }
     return call(SeriesResponse, `series?${p}`)
   },
+  geoStates: () => call(z.custom<GeoJSON.FeatureCollection>(), 'geo/states'),
   place: (lat: number, lon: number) => call(PlaceResponse, `place?lat=${lat}&lon=${lon}`),
   clues: (variable: string) => call(ClueResponse, `clues?var=${variable}`),
 }

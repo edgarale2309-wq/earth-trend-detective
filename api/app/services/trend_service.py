@@ -88,33 +88,14 @@ def _fit(y: np.ndarray, per_dec: float, base: float) -> TrendResult:
     )
 
 
-def cell_trends(cube: np.ndarray, times: pd.DatetimeIndex, resolution: str = "annual"):
-    """cube[time, lat, lon] -> arrays of sen slope/decade, p, p_fdr, state per cell."""
-    _, nlat, nlon = cube.shape
-    slope = np.full((nlat, nlon), np.nan)
-    pct = np.full((nlat, nlon), np.nan)
-    p = np.full((nlat, nlon), np.nan)
-    state = np.full((nlat, nlon), "nodata", dtype=object)
-    years = times.year.nunique()
-    for i in range(nlat):
-        for j in range(nlon):
-            col = pd.Series(cube[:, i, j], index=times)
-            if col.isna().all():
-                continue
-            r = analyze_series(col, resolution) if not insufficient(col, years) else None
-            if r is None:
-                state[i, j] = "insufficient"
-                continue
-            if r.state == "insufficient":
-                state[i, j] = "insufficient"
-                continue
-            slope[i, j], p[i, j] = r.sen_slope_per_decade, r.p_value
-            pct[i, j] = r.pct_per_decade if r.pct_per_decade is not None else np.nan
-    ok = np.isfinite(p)
-    p_fdr = np.full_like(p, np.nan)
-    if ok.sum() > 0:
-        p_fdr[ok] = multipletests(p[ok], alpha=0.05, method="fdr_bh")[1]
-    for i, j in zip(*np.where(ok), strict=True):
-        sig = p_fdr[i, j] < 0.05
-        state[i, j] = ("rising" if slope[i, j] > 0 else "falling") if sig else "no_trend"
-    return slope, pct, p, p_fdr, state
+def fdr_classify(results: dict[str, TrendResult]) -> None:
+    """Benjamini-Hochberg FDR over many regions: only FDR-significant ones keep a rising/falling label.
+    p_value is replaced by the adjusted value so the UI never shows an unadjusted p on a map."""
+    ids = [k for k, r in results.items() if r.p_value is not None and r.state != "insufficient"]
+    if not ids:
+        return
+    adj = multipletests([results[k].p_value for k in ids], alpha=0.05, method="fdr_bh")[1]
+    for k, p in zip(ids, adj, strict=True):
+        r = results[k]
+        r.p_value = float(p)
+        r.state = ("rising" if (r.sen_slope_per_decade or 0) > 0 else "falling") if p < 0.05 else "no_trend"

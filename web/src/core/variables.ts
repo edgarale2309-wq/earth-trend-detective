@@ -1,24 +1,27 @@
+export type MapName = 'BrBG_r' | 'PuOr_r' | 'RdBu_r'
+
 export const VARIABLE_IDS = ['precipitation', 'solar_radiation', 'soil_moisture', 'surface_runoff', 'no2', 'ozone'] as const
 export type VariableId = (typeof VARIABLE_IDS)[number]
 
-export const VARIABLES: Record<VariableId, { accent: string; icon: string; map: 'BrBG' | 'PuOr_r' | 'RdBu_r' }> = {
-  precipitation: { accent: '#6FB6FF', icon: 'CloudRain', map: 'BrBG' },
-  solar_radiation: { accent: '#FFC266', icon: 'Sun', map: 'PuOr_r' },
-  soil_moisture: { accent: '#6EDBA6', icon: 'Sprout', map: 'BrBG' },
-  surface_runoff: { accent: '#5FE0E8', icon: 'Waves', map: 'BrBG' },
-  no2: { accent: '#FF8CC6', icon: 'Factory', map: 'RdBu_r' },
-  ozone: { accent: '#B9A6FF', icon: 'ShieldHalf', map: 'RdBu_r' },
+export const VARIABLES: Record<VariableId, { accent: string; icon: string; map: MapName }> = {
+  precipitation: { accent: '#38BDF8', icon: 'CloudRain', map: 'BrBG_r' },
+  solar_radiation: { accent: '#F59E0B', icon: 'Sun', map: 'PuOr_r' },
+  soil_moisture: { accent: '#10B981', icon: 'Sprout', map: 'BrBG_r' },
+  surface_runoff: { accent: '#22D3EE', icon: 'Waves', map: 'BrBG_r' },
+  no2: { accent: '#F472B6', icon: 'Factory', map: 'RdBu_r' },
+  ozone: { accent: '#A78BFA', icon: 'ShieldHalf', map: 'RdBu_r' },
 }
 
 export const REGION_IDS = ['mexico', 'desert', 'rainforest', 'estuary', 'city'] as const
 export type RegionId = (typeof REGION_IDS)[number]
 
-export const REGION_VIEW: Record<RegionId, { center: [number, number]; zoom: number }> = {
-  mexico: { center: [-102.5, 23.5], zoom: 3.6 },
-  desert: { center: [-111.5, 30], zoom: 5.4 },
-  rainforest: { center: [-91.5, 17.5], zoom: 6 },
-  estuary: { center: [-96.5, 20], zoom: 6 },
-  city: { center: [-99, 19.5], zoom: 6 },
+/** [[west, south], [east, north]] used to fit the map to each preset region. */
+export const REGION_BOUNDS: Record<RegionId, [[number, number], [number, number]]> = {
+  mexico: [[-118.4, 14.4], [-86.5, 32.8]],
+  desert: [[-115.5, 27.5], [-107.5, 32.5]],
+  rainforest: [[-95, 15.5], [-88.5, 19.5]],
+  estuary: [[-99, 17.5], [-94, 22.5]],
+  city: [[-102, 17.5], [-96.5, 21.5]],
 }
 
 export type TrendState = 'rising' | 'falling' | 'no_trend' | 'insufficient'
@@ -36,8 +39,8 @@ function hexToRgb(h: string): [number, number, number] {
 }
 
 /** t in [-1, 1] -> hex. -1 = "Low" end, +1 = "High" end of the legend. */
-export function divergingColor(map: 'BrBG' | 'PuOr_r' | 'RdBu_r', t: number): string {
-  const base: string[] = map === 'BrBG' ? [...RAMPS.BrBG] : map === 'PuOr_r' ? [...RAMPS.PuOr].reverse() : [...RAMPS.RdBu].reverse()
+export function divergingColor(map: 'BrBG_r' | 'PuOr_r' | 'RdBu_r', t: number): string {
+  const base: string[] = map === 'BrBG_r' ? [...RAMPS.BrBG].reverse() : map === 'PuOr_r' ? [...RAMPS.PuOr].reverse() : [...RAMPS.RdBu].reverse()
   base[5] = '#2A1F38'
   const x = (Math.max(-1, Math.min(1, t)) + 1) / 2 * (base.length - 1)
   const i = Math.min(Math.floor(x), base.length - 2)
@@ -48,7 +51,7 @@ export function divergingColor(map: 'BrBG' | 'PuOr_r' | 'RdBu_r', t: number): st
   return `rgb(${c[0]},${c[1]},${c[2]})`
 }
 
-export function legendGradient(map: 'BrBG' | 'PuOr_r' | 'RdBu_r'): string {
+export function legendGradient(map: 'BrBG_r' | 'PuOr_r' | 'RdBu_r'): string {
   const stops = Array.from({ length: 11 }, (_, i) => divergingColor(map, (i / 10) * 2 - 1))
   return `linear-gradient(to right, ${stops.join(',')})`
 }

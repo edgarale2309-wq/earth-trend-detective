@@ -18,6 +18,7 @@ def test_trends_has_cells_and_summary():
     assert r.status_code == 200
     j = r.json()
     assert j["n_cells"] > 0 and j["summary"]["state"] in {"rising", "falling", "no_trend"}
+    assert len(j["states"]) >= 31 and all(r["n_cells"] >= 1 for r in j["states"])
     assert j["data_status"] == "nasa"
 
 
@@ -51,3 +52,11 @@ def test_clues_return_regions():
 def test_demo_variables_are_flagged():
     r = client.post("/api/v1/trends", json={"variable": "no2", "region": "city"}).json()
     assert r["data_status"] == "synthetic_demo"
+
+
+def test_state_series_and_geojson():
+    g = client.get("/api/v1/geo/states").json()
+    assert len(g["features"]) >= 31
+    sid = g["features"][0]["properties"]["id"]
+    s = client.get("/api/v1/series", params={"var": "precipitation", "state": sid}).json()
+    assert s["point"]["state"] == sid and s["mean"] > 0

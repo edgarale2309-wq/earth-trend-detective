@@ -13,6 +13,7 @@ interface ExplorerState {
   mode: Mode
   deseasonalize: boolean
   point: { lat: number; lon: number } | null
+  state: string | null
   set: (p: Partial<Omit<ExplorerState, 'set'>>) => void
 }
 
@@ -28,5 +29,6 @@ export const useExplorer = create<ExplorerState>((set) => ({
   mode: 'explorer',
   deseasonalize: true,
   point: null,
+  state: null,
   set: (p) => set(p),
 }))

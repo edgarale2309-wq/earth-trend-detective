@@ -19,6 +19,18 @@
 - **Se quitan los niveles de dificultad** de todas las interfaces.
 - Imágenes de variable en formato cuadrado (1:1) con fondo transparente.
 
+
+> **Cambios v2.1 (decididos por el equipo, prevalecen sobre lo anterior si hay conflicto)**
+> - Navegación: barra lateral izquierda contraíble (Inicio, 6 variables, Reto detective, Mi lugar, Más información). Barra superior solo con nombre, Explorer/Scientific, idioma y Compartir.
+> - Pantalla a todo el ancho, sin márgenes laterales máximos.
+> - Mapa por **estados** (polígonos de Natural Earth admin-1) en lugar de rejilla; hover resalta el borde en cian y muestra nombre, dato y insignia.
+> - Escala del mapa: **Bajo = verde azulado / azul / morado, Alto = café / rojo / naranja** (BrBG_r, RdBu_r, PuOr_r).
+> - Filtros (región, detalle, periodo) debajo del mapa; la pista de detective es un botón que se despliega.
+> - Gráfica interactiva: puntos, crosshair, tooltip con año, valor y % vs. promedio; selección por arrastre para recalcular el periodo; interruptor Anomalías / Valores absolutos.
+> - Carrusel de Inicio con tarjeta activa ancha (2:1, dos columnas, borde y degradado en el acento, botón relleno en el acento con texto oscuro) y vecinas colapsadas. Esto sustituye la regla "el acento nunca es fondo" **solo** en esta tarjeta y en su botón.
+> - Acentos más saturados: #38BDF8, #F59E0B, #10B981, #22D3EE, #F472B6, #A78BFA.
+> - "Método" ahora se llama "Más información".
+
 ---
 
 ## TABLA DE CONTENIDOS

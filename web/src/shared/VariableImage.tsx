@@ -1,7 +1,8 @@
 import { CircleDashed, CloudRain, Factory, Minus, ShieldHalf, Sprout, Sun, TrendingDown, TrendingUp, Waves } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { VARIABLES, type VariableId } from '../core/variables'
+import { type VariableId } from '../core/variables'
+import { VariableArt } from './VariableArt'
 
 export const ICONS = { CloudRain, Sun, Sprout, Waves, Factory, ShieldHalf } as const
 export type ImageState = 'idle' | 'rising' | 'falling' | 'no_trend' | 'insufficient'
@@ -18,18 +19,18 @@ export function VariableImage({ variable, state = 'idle', size = 160, className 
   const useIdle = failed[key] && state !== 'idle'
   const src = `/images/variables/${variable}/${useIdle ? 'idle' : state}.webp`
   const dead = failed[`${variable}/idle`] || (state === 'idle' && failed[key])
-  const Icon = ICONS[VARIABLES[variable].icon as keyof typeof ICONS]
   const Overlay = STATE_ICON[state]
   const alt = t(`vars.${variable}.alt`)
 
   if (dead) {
     return (
-      <div
-        role="img" aria-label={alt} style={{ width: size, height: size }}
-        className={`accent-transition relative flex items-center justify-center rounded-full border border-accent/40 text-accent ${className}`}
-      >
-        <Icon size={size * 0.42} strokeWidth={1.5} aria-hidden />
-        {Overlay && <Overlay size={size * 0.2} className="absolute bottom-[12%] right-[12%]" aria-hidden />}
+      <div role="img" aria-label={alt} style={{ width: size, height: size }} className={`relative ${className}`}>
+        <VariableArt variable={variable} size={size} />
+        {Overlay && (
+          <span className="accent-transition absolute bottom-[4%] right-[4%] flex items-center justify-center rounded-full border border-accent bg-surface p-1.5 text-accent">
+            <Overlay size={Math.max(14, size * 0.13)} aria-hidden />
+          </span>
+        )}
       </div>
     )
   }

@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '../core/api'
@@ -40,5 +41,19 @@ export function GlossaryTip({ term, children }: { term: 'p' | 'sen' | 'anomaly' 
     <abbr title={t(`glossary.${term}`)} className="cursor-help underline decoration-dotted underline-offset-4">
       {children}
     </abbr>
+  )
+}
+
+/** Hover/focus tooltip for short plain-language explanations. */
+export function Tip({ text, children }: { text: string; children: React.ReactNode }) {
+  const id = useId()
+  return (
+    <span className="group relative inline-flex">
+      <span aria-describedby={id} tabIndex={0} className="inline-flex rounded outline-offset-2">{children}</span>
+      <span
+        id={id} role="tooltip"
+        className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 hidden w-60 -translate-x-1/2 rounded-xl border border-purple bg-deep-purple p-2.5 text-left text-xs font-normal normal-case leading-relaxed tracking-normal text-ink group-focus-within:block group-hover:block"
+      >{text}</span>
+    </span>
   )
 }

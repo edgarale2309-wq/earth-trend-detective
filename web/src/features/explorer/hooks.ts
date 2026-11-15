@@ -17,9 +17,10 @@ export function useTrends(q: Query | null) {
 
 export function useSeries(q: Query | null) {
   const point = useExplorer((s) => s.point)
+  const state = useExplorer((s) => s.state)
   const deseasonalize = useExplorer((s) => s.deseasonalize)
   return useQuery({
-    queryKey: ['series', q, deseasonalize, point], queryFn: () => api.series(q!, deseasonalize, point),
+    queryKey: ['series', q, deseasonalize, point, state], queryFn: () => api.series(q!, deseasonalize, { point, state }),
     enabled: !!q, staleTime: Infinity, placeholderData: keepPreviousData, retry: 1,
   })
 }
@@ -37,4 +38,8 @@ export function fmt(n: number | null | undefined, d = 2): string {
 export function fmtP(p: number | null | undefined): string {
   if (p == null) return '—'
   return p < 0.001 ? '<0.001' : p.toFixed(3)
+}
+
+export function useGeoStates() {
+  return useQuery({ queryKey: ['geo-states'], queryFn: () => api.geoStates(), staleTime: Infinity })
 }

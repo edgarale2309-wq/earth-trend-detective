@@ -4,7 +4,7 @@ import { divergingColor } from './variables'
 
 describe('divergingColor', () => {
   it('uses the dark neutral at zero so unchanged cells are not holes', () => {
-    expect(divergingColor('BrBG', 0)).toBe('rgb(42,31,56)')
+    expect(divergingColor('BrBG_r', 0)).toBe('rgb(42,31,56)')
   })
   it('clamps beyond the legend range', () => {
     expect(divergingColor('RdBu_r', 5)).toBe(divergingColor('RdBu_r', 1))

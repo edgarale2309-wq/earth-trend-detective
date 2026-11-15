@@ -7,6 +7,7 @@ from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from app.domain import states
 from app.domain.catalog import REGIONS, VARIABLES
 from app.services import analysis
 
@@ -56,10 +57,13 @@ def trends(req: TrendRequest):
 @api.get("/series")
 def series(var: str, region: str = "mexico", start: int = 1984, end: int = 2025,
            resolution: str = Query("annual", pattern="^(annual|monthly)$"), deseasonalize: bool = True,
-           lat: float | None = None, lon: float | None = None):
-    region = "mexico" if (lat is not None and region not in REGIONS) else region
-    return _guard(analysis.series, var, "mexico" if lat is not None else region, start, end, resolution,
-                  deseasonalize, lat, lon)
+           lat: float | None = None, lon: float | None = None, state: str | None = None):
+    return _guard(analysis.series, var, region, start, end, resolution, deseasonalize, lat, lon, state)
+
+
+@api.get("/geo/states")
+def geo_states():
+    return states.geojson()
 
 
 @api.get("/place")
