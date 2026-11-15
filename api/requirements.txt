@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+xarray
+zarr
+numpy
+pandas
+scipy
+statsmodels
+pymannkendall
+requests
+python-dotenv
+httpx
+pytest
+ruff

@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  --crimson: 140 17 74;
+  --wine: 115 18 81;
+  --magenta: 142 29 111;
+  --purple: 97 32 115;
+  --deep-purple: 47 23 64;
+  --background: 20 10 30;
+  --surface: 30 16 41;
+  --on-surface: 244 236 247;
+  --on-surface-variant: 196 178 207;
+  --input-border: 143 107 163;
+  --nodata: 74 61 88;
+  --error: 255 138 128;
+  --accent: 242 166 222;
+}
+[data-variable="precipitation"] { --accent: 111 182 255; }
+[data-variable="solar_radiation"] { --accent: 255 194 102; }
+[data-variable="soil_moisture"] { --accent: 110 219 166; }
+[data-variable="surface_runoff"] { --accent: 95 224 232; }
+[data-variable="no2"] { --accent: 255 140 198; }
+[data-variable="ozone"] { --accent: 185 166 255; }
+
+@theme inline {
+  --color-crimson: rgb(var(--crimson));
+  --color-wine: rgb(var(--wine));
+  --color-magenta: rgb(var(--magenta));
+  --color-purple: rgb(var(--purple));
+  --color-deep-purple: rgb(var(--deep-purple));
+  --color-background: rgb(var(--background));
+  --color-surface: rgb(var(--surface));
+  --color-ink: rgb(var(--on-surface));
+  --color-ink-muted: rgb(var(--on-surface-variant));
+  --color-input-border: rgb(var(--input-border));
+  --color-nodata: rgb(var(--nodata));
+  --color-danger: rgb(var(--error));
+  --color-accent: rgb(var(--accent)); /* only text-, border-, fill-, stroke-, ring- (never bg-) */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+}
+
+html { font-size: 16px; }
+body {
+  margin: 0;
+  background-color: rgb(var(--background));
+  color: rgb(var(--on-surface));
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button, [role="tab"], select, input { font: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; }
+
+.accent-transition { transition: color 300ms ease-in-out, border-color 300ms ease-in-out, fill 300ms ease-in-out, stroke 300ms ease-in-out; }
+.section-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--accent)); }
+.num { font-family: "JetBrains Mono", ui-monospace, monospace; }
+.starfield {
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 12%, rgba(255,255,255,.35) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 34% 72%, rgba(255,255,255,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 90% 64%, rgba(255,255,255,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 56% 40%, rgba(255,255,255,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 6% 88%, rgba(255,255,255,.35) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 66% 90%, rgba(255,255,255,.3) 50%, transparent 51%);
+}
+.carousel { scrollbar-width: none; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
+.carousel::-webkit-scrollbar { display: none; }
+.maplibregl-ctrl-attrib { background: rgba(20,10,30,.7) !important; color: #c4b2cf !important; }
+.maplibregl-ctrl-attrib a { color: #c4b2cf !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation: none !important; scroll-behavior: auto !important; }
+}
