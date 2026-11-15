@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useAccent } from '../../core/useAccent'
@@ -55,6 +56,9 @@ export default function ExplorerPage() {
   const series = useSeries(q)
   const geo = useGeoStates()
   useAccent(variable)
+  const w = typeof window === 'undefined' ? 1440 : window.innerWidth
+  const [left, setLeft] = useState(w >= 1280)
+  const [right, setRight] = useState(w >= 1280)
 
   if (variable === 'home') return null
 
@@ -68,26 +72,44 @@ export default function ExplorerPage() {
   const placeLabel = stateName
     ?? (point ? `${point.lat.toFixed(1)}°, ${point.lon.toFixed(1)}°` : t('chart.placeRegion', { region: t(`explorer.regions.${region}`) }))
 
+  const toggle = 'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-purple text-ink-muted transition-colors duration-150 hover:bg-deep-purple hover:text-ink'
+
   return (
     <>
       {offline && <p role="status" className="bg-deep-purple px-4 py-2 text-center text-sm">{t('states.offline')}</p>}
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 p-3 sm:p-4 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_380px] 2xl:grid-cols-[340px_minmax(0,1fr)_440px]">
-        <div><VariablePanel variable={variable} imageState={imageState} dataStatus={status} /></div>
-        <div className="flex min-w-0 flex-col gap-3">
+      <div className="p-3 sm:p-4 lg:h-[calc(100dvh-3.5rem)]">
+        <div className="h-[82dvh] min-w-0 lg:h-full">
           <TrendMap
             variable={variable} region={region} data={trends.data} geo={geo.data} loading={trends.isFetching || geo.isFetching} error={trends.error ?? geo.error}
             refetch={() => { trends.refetch(); geo.refetch() }} start={start} end={end}
             footer={<FilterBar />}
+            cornerLeft={
+              <button onClick={() => setLeft((v) => !v)} aria-expanded={left} aria-controls="panel-left" className={toggle}
+                aria-label={left ? t('explorer.hideInfo') : t('explorer.showInfo')} title={left ? t('explorer.hideInfo') : t('explorer.showInfo')}>
+                {left ? <PanelLeftClose size={18} aria-hidden /> : <PanelLeftOpen size={18} aria-hidden />}
+              </button>
+            }
+            cornerRight={
+              <button onClick={() => setRight((v) => !v)} aria-expanded={right} aria-controls="panel-right" className={`${toggle} ml-2`}
+                aria-label={right ? t('explorer.hideCharts') : t('explorer.showCharts')} title={right ? t('explorer.hideCharts') : t('explorer.showCharts')}>
+                {right ? <PanelRightClose size={18} aria-hidden /> : <PanelRightOpen size={18} aria-hidden />}
+              </button>
+            }
+            overlayLeft={left ? (
+              <div id="panel-left"><VariablePanel variable={variable} imageState={imageState} dataStatus={status} /></div>
+            ) : null}
+            overlayRight={right ? (
+              <div id="panel-right" className="flex flex-col gap-3">
+                {stateName && (
+                  <button onClick={() => set({ state: null, point: null })} className="h-9 self-start rounded-full border border-input-border bg-surface px-3 text-xs text-ink hover:bg-deep-purple">
+                    {t('explorer.selectedState', { name: stateName })} · {t('explorer.clearSelection')}
+                  </button>
+                )}
+                <SeriesPanel variable={variable} data={series.data} loading={series.isFetching} error={series.error} refetch={() => series.refetch()} placeLabel={placeLabel} name={name} />
+                {stats ? <VerdictPanel stats={stats} unit={series.data!.unit} name={name} mode={mode} /> : <Skeleton className="h-52" />}
+              </div>
+            ) : null}
           />
-        </div>
-        <div className="flex min-w-0 flex-col gap-3 lg:col-span-2 xl:col-span-1">
-          {stateName && (
-            <button onClick={() => set({ state: null, point: null })} className="h-9 self-start rounded-full border border-input-border px-3 text-xs text-ink hover:bg-deep-purple">
-              {t('explorer.selectedState', { name: stateName })} · {t('explorer.clearSelection')}
-            </button>
-          )}
-          <SeriesPanel variable={variable} data={series.data} loading={series.isFetching} error={series.error} refetch={() => series.refetch()} placeLabel={placeLabel} name={name} />
-          {stats ? <VerdictPanel stats={stats} unit={series.data!.unit} name={name} mode={mode} /> : <Skeleton className="h-52" />}
         </div>
       </div>
     </>

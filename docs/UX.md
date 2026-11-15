@@ -29,6 +29,7 @@
 > - Gráfica interactiva: puntos, crosshair, tooltip con año, valor y % vs. promedio; selección por arrastre para recalcular el periodo; interruptor Anomalías / Valores absolutos.
 > - Carrusel de Inicio con tarjeta activa ancha (2:1, dos columnas, borde y degradado en el acento, botón relleno en el acento con texto oscuro) y vecinas colapsadas. Esto sustituye la regla "el acento nunca es fondo" **solo** en esta tarjeta y en su botón.
 > - Acentos más saturados: #38BDF8, #F59E0B, #10B981, #22D3EE, #F472B6, #A78BFA.
+> - Explorador v2.2: el mapa ocupa toda la altura de la pantalla; las columnas de descripción y de gráficas son paneles laterales que se ocultan con un botón en las esquinas del encabezado del mapa (el mapa se ensancha). El mapa queda fijo en México con algo de frontera: solo permite alejar, nunca acercar más.
 > - "Método" ahora se llama "Más información".
 
 ---

@@ -165,7 +165,11 @@
       "estuary": "Estuary (Veracruz)",
       "city": "Large city (Mexico Valley)"
     },
-    "select": "Select"
+    "select": "Select",
+    "showInfo": "Show variable information",
+    "hideInfo": "Hide variable information",
+    "showCharts": "Show charts and verdict",
+    "hideCharts": "Hide charts and verdict"
   },
   "chart": {
     "title": "How it changed over time",

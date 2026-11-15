@@ -21,6 +21,22 @@ const STYLE: maplibregl.StyleSpecification = {
   layers: [{ id: 'ocean', type: 'background', paint: { 'background-color': OCEAN } }],
 }
 
+/** Centre of a geometry's bounding box, used to decide whether a state belongs to the selected region. */
+function center(g: GeoJSON.Geometry): [number, number] {
+  let x0 = 180, x1 = -180, y0 = 90, y1 = -90
+  const walk = (c: unknown): void => {
+    if (Array.isArray(c) && typeof c[0] === 'number') {
+      const [x, y] = c as [number, number]
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y)
+    } else if (Array.isArray(c)) c.forEach(walk)
+  }
+  walk((g as { coordinates?: unknown }).coordinates)
+  return [(x0 + x1) / 2, (y0 + y1) / 2]
+}
+
+// The map opens on Mexico plus a little border; that is also the widest view allowed.
+const VIEW = REGION_BOUNDS.mexico
+
 function accentRgb() {
   const v = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().split(/\s+/).join(',')
   return `rgb(${v || '242,166,222'})`
@@ -41,9 +57,10 @@ function scaleMax(rows: StateRow[]): number {
   return a.length ? Math.max(a[Math.floor(a.length * 0.95)] ?? a[a.length - 1], 1e-9) : 1
 }
 
-export function TrendMap({ variable, region, data, geo, loading, error, refetch, start, end, footer }: {
+export function TrendMap({ variable, region, data, geo, loading, error, refetch, start, end, footer, cornerLeft, cornerRight, overlayLeft, overlayRight }: {
   variable: VariableId; region: RegionId; data?: TrendsResponse; geo?: GeoJSON.FeatureCollection
-  loading: boolean; error: unknown; refetch: () => void; start: number; end: number; footer: React.ReactNode
+  loading: boolean; error: unknown; refetch: () => void; start: number; end: number; footer: React.ReactNode; cornerLeft?: React.ReactNode; cornerRight?: React.ReactNode
+  overlayLeft?: React.ReactNode; overlayRight?: React.ReactNode
 }) {
   const { t } = useTranslation()
   const tRef = useRef(t)
@@ -66,6 +83,8 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
       type: 'FeatureCollection' as const,
       features: geo.features.map((f) => {
         const r = by.get(String((f.properties as { id: string }).id))
+        const [cx, cy] = center(f.geometry)
+        const [[w, so], [e, n]] = REGION_BOUNDS[region]
         return {
           ...f,
           properties: {
@@ -73,11 +92,12 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
             slope: r?.slope ?? null, pct: r?.pct ?? null, p: r?.p ?? null,
             color: r?.slope == null ? '#4A3D58' : divergingColor(palette, r.slope / max),
             sig: r?.state === 'rising' || r?.state === 'falling',
+            inRegion: region === 'mexico' || (cx >= w && cx <= e && cy >= so && cy <= n),
           },
         }
       }),
     }
-  }, [geo, data, palette, max])
+  }, [geo, data, palette, max, region])
 
   const apply = () => {
     const m = map.current
@@ -92,10 +112,21 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
   useEffect(() => {
     if (!box.current || map.current) return
     const m = new maplibregl.Map({
-      container: box.current, style: STYLE, bounds: REGION_BOUNDS[region], fitBoundsOptions: { padding: 12 },
+      container: box.current, style: STYLE, bounds: VIEW, fitBoundsOptions: { padding: 8 },
       attributionControl: { compact: true }, dragRotate: false,
     })
     map.current = m
+    // Widest view = all of Mexico (with a bit of border); closest view = about one state.
+    let placed = false
+    const fit = () => {
+      const cam = m.cameraForBounds(VIEW, { padding: 8 })
+      if (!cam || cam.zoom == null || !cam.center) return
+      m.setMinZoom(cam.zoom)
+      m.setMaxZoom(cam.zoom + 2.3)
+      if (!placed) { m.jumpTo({ center: cam.center, zoom: cam.zoom }); placed = true }
+    }
+    const ro = new ResizeObserver(() => { m.resize(); fit() })
+    ro.observe(box.current)
     if (import.meta.env.DEV) (window as unknown as { __map: unknown }).__map = m
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left')
     m.on('error', (e) => console.warn('[map]', (e as unknown as { error?: Error }).error?.message ?? e))
@@ -122,6 +153,7 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
     }
 
     m.on('load', async () => {
+      fit()
       const [{ feature }, topo] = await Promise.all([import('topojson-client'), import('world-atlas/countries-50m.json')])
       const t0 = topo.default as unknown as { objects: { countries: never } }
       m.addSource('countries', { type: 'geojson', data: feature(t0 as never, t0.objects.countries) as never, attribution: 'Natural Earth' })
@@ -132,7 +164,7 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
       m.addLayer({ id: 'nodata', type: 'fill', source: 'states', filter: ['==', ['get', 'state'], 'insufficient'], paint: { 'fill-pattern': 'nodata' } })
       m.addLayer({
         id: 'states-fill', type: 'fill', source: 'states', filter: ['!=', ['get', 'state'], 'insufficient'],
-        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['case', ['get', 'sig'], 0.95, 0.5] },
+        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['case', ['!', ['get', 'inRegion']], 0.18, ['get', 'sig'], 0.95, 0.5] },
       })
       m.addLayer({ id: 'states-border', type: 'line', source: 'states', paint: { 'line-color': '#C4B2CF', 'line-opacity': 0.4, 'line-width': 0.7 } })
       m.addLayer({ id: 'hover', type: 'line', source: 'states', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': HILITE, 'line-width': 2.5 } })
@@ -151,17 +183,13 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
     }
     m.on('click', 'states-fill', pick)
     m.on('click', 'nodata', pick)
-    return () => { m.remove(); map.current = null; ready.current = false }
+    return () => { ro.disconnect(); m.remove(); map.current = null; ready.current = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const unitRef = useRef(unit)
   unitRef.current = unit
   useEffect(() => { apply() }, [joined, selected, variable]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    map.current?.fitBounds(REGION_BOUNDS[region], { padding: 12, duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 400 })
-  }, [region])
-
   const rows = useMemo(
     () => [...(data?.states ?? [])].filter((r) => r.slope != null).sort((a, b) => Math.abs(b.slope!) - Math.abs(a.slope!)),
     [data],
@@ -169,9 +197,10 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
   const name = t(`vars.${variable}.name`)
 
   return (
-    <section className="flex min-h-[560px] flex-col rounded-2xl border border-purple bg-surface p-4 lg:p-5" aria-labelledby="map-h">
+    <section className="flex h-full min-h-[520px] flex-col rounded-2xl border border-purple bg-surface p-3 sm:p-4" aria-labelledby="map-h">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative flex items-center gap-1.5">
+          {cornerLeft}
           <h2 id="map-h" className="section-label">{t('explorer.map')}</h2>
           <button onClick={() => setShowNote((v) => !v)} aria-expanded={showNote} aria-label={t('explorer.mapNote')} title={t('explorer.mapNote')}
             className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted hover:bg-deep-purple hover:text-ink">
@@ -187,11 +216,12 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
           <span>{t('explorer.mapLow')}</span>
           <span className="h-2.5 w-28 rounded-full" style={{ background: legendGradient(palette) }} aria-hidden />
           <span>{t('explorer.mapHigh')}</span>
+          {cornerRight}
         </div>
       </div>
       <p className="mt-1 text-xs text-ink-muted">{t('explorer.mapLegend', { unit })} · {start}–{end}</p>
 
-      <div className="relative mt-3 min-h-[440px] flex-1 overflow-hidden rounded-xl" style={{ background: OCEAN }}>
+      <div className="relative mt-3 min-h-[320px] flex-1 overflow-hidden rounded-xl" style={{ background: OCEAN }}>
         <div ref={box} role="img" aria-label={t('explorer.mapAlt')} style={{ position: 'absolute', inset: 0 }} className={asTable ? 'invisible' : ''} />
         {loading && <div className="absolute inset-x-0 top-0 z-10 h-1 animate-pulse border-t-2 border-accent" aria-hidden />}
         {loading && !data && <Skeleton className="absolute inset-0" />}
@@ -214,6 +244,8 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
             </table>
           </div>
         )}
+        <FloatingPanel side="left">{overlayLeft}</FloatingPanel>
+        <FloatingPanel side="right">{overlayRight}</FloatingPanel>
         {error != null && !data && <div className="absolute inset-0 z-20 grid place-items-center bg-background p-4"><ErrorState error={error} onRetry={refetch} /></div>}
       </div>
       <div className="mt-2 flex justify-end">
@@ -221,5 +253,17 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
       </div>
       {footer}
     </section>
+  )
+}
+
+/** Floating card laid over the map; renders nothing when its content is null (panel hidden). */
+function FloatingPanel({ side, children }: { side: 'left' | 'right'; children?: React.ReactNode }) {
+  if (!children) return null
+  return (
+    <div className={`pointer-events-none absolute inset-y-2 z-30 flex ${side === 'left' ? 'left-2 justify-start' : 'right-2 justify-end'}`}>
+      <div className={`pointer-events-auto max-h-full overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.55)] ${side === 'left' ? 'w-[min(312px,88vw)]' : 'w-[min(400px,92vw)]'}`}>
+        {children}
+      </div>
+    </div>
   )
 }

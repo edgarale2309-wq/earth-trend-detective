@@ -165,7 +165,11 @@
       "estuary": "Estuario (Veracruz)",
       "city": "Gran ciudad (Valle de México)"
     },
-    "select": "Seleccionar"
+    "select": "Seleccionar",
+    "showInfo": "Mostrar información de la variable",
+    "hideInfo": "Ocultar información de la variable",
+    "showCharts": "Mostrar gráficas y veredicto",
+    "hideCharts": "Ocultar gráficas y veredicto"
   },
   "chart": {
     "title": "Cómo cambió con el tiempo",
