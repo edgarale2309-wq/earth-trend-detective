@@ -59,7 +59,8 @@
     "howIntro": "Cuatro pasos sugeridos, en orden, para aprovechar la herramienta: empieza con el panorama en el mapa y termina comprobando si el cambio es real. Puedes saltar entre pasos, pero esta ruta es la forma más fácil de entrar.",
     "heroVideoAlt": "Animación de Earth Trend Detective: satélites sobre México, un mapa de tendencias y una gráfica de series de tiempo",
     "carouselLabel": "Carrusel de variables",
-    "auxTouch": "Desliza o usa las flechas para cambiar de variable."
+    "auxTouch": "Desliza o usa las flechas para cambiar de variable.",
+    "aiBadge": "Video generado con IA"
   },
   "vars": {
     "precipitation": {
@@ -410,6 +411,6 @@
     "team": "Equipo: datos e ingesta, backend y estadística, mapa, experiencia, integración y contenido.",
     "repo": "Repositorio de código abierto",
     "aiT": "Declaración de uso de IA",
-    "ai": "Se usó un asistente de IA para ayudar a escribir el código de esta aplicación. Las ilustraciones de las variables son dibujos vectoriales hechos para esta app. Todas las estadísticas las calculan bibliotecas de código abierto y las revisó el equipo."
+    "ai": "Se usaron herramientas de Super Inteligencia (SI). Código: escrito con ayuda de un asistente de IA (Claude Code, Anthropic) y revisado por el equipo. Documentación y bancos de preguntas del reto detective: redactados con apoyo de IA y revisados por el equipo. Video de la página de inicio: generado con Google Gemini (generación de video) y marcado como «Video generado con IA» en la página. Las ilustraciones de las variables son dibujos vectoriales hechos para esta app. Las estadísticas las calculan bibliotecas de código abierto y se verifican con pruebas automáticas. No se generaron ni modificaron logotipos, banderas ni identificadores de misión de la NASA."
   }
 }

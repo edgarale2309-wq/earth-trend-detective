@@ -18,12 +18,15 @@ function HeroVideo() {
   }, [])
   return (
     <div className="mx-auto w-full max-w-2xl xl:max-w-none" role="img" aria-label={t('home.heroVideoAlt')}>
+      <div className="relative">
       <video
         ref={ref} src="/media/hero.mp4" aria-hidden
         autoPlay muted loop playsInline preload="auto"
         className="block aspect-video w-full bg-transparent object-cover mix-blend-screen"
         style={{ WebkitMaskImage: 'radial-gradient(ellipse 72% 72% at 50% 50%, #000 55%, transparent 100%)', maskImage: 'radial-gradient(ellipse 72% 72% at 50% 50%, #000 55%, transparent 100%)' }}
       />
+        <span className="pointer-events-none absolute bottom-2 right-3 rounded-md bg-background/70 px-2 py-0.5 text-[11px] font-medium tracking-wide text-ink">{t('home.aiBadge')}</span>
+      </div>
     </div>
   )
 }

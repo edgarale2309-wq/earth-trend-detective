@@ -59,7 +59,8 @@
     "howIntro": "Four suggested steps, in order, to get the most out of the tool: start with the big picture on the map and finish by checking whether the change is real. You can jump around, but this route is the easiest way in.",
     "heroVideoAlt": "Animation of the Earth Trend Detective: satellites over Mexico, a trend map and a time-series chart",
     "carouselLabel": "Variable carousel",
-    "auxTouch": "Swipe or use the arrows to change variable."
+    "auxTouch": "Swipe or use the arrows to change variable.",
+    "aiBadge": "AI-generated video"
   },
   "vars": {
     "precipitation": {
@@ -410,6 +411,6 @@
     "team": "Team: data and ingestion, backend and statistics, map, experience, integration, and content.",
     "repo": "Open source repository",
     "aiT": "AI use statement",
-    "ai": "AI coding assistance was used to help write this application's code. Variable illustrations are vector drawings made for this app. All statistics are computed by open-source libraries and reviewed by the team."
+    "ai": "Super Intelligence (SI) tools were used. Code: written with the help of an AI coding assistant (Claude Code, Anthropic) and reviewed by the team. Documentation and the detective question banks: drafted with AI assistance and reviewed by the team. Home-page video: generated with Google Gemini (video generation) and labelled “AI-generated video” on the page. Variable illustrations are vector drawings made for this app. All statistics are computed by open-source libraries and checked by automated tests. No NASA logos, flags or mission identifiers were generated or modified."
   }
 }

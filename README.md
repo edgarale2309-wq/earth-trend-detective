@@ -80,3 +80,11 @@ Rebuild the data: `python scripts/build_states.py` (polygons), `python scripts/f
 - MERRA-2 is a reanalysis (model output guided by observations), not a direct measurement. Only linear trends are tested. The 1° grid blurs small states.
 - Screen-reader testing by hand (NVDA/VoiceOver) is pending; automated checks pass.
 - Docker image not built in the authoring environment (the single-process serving was tested locally).
+
+## Use of Super Intelligence (SI)
+
+- **Code**: written with the help of an AI coding assistant (Claude Code, Anthropic) and reviewed and tested by the team (22 API tests, 9 web tests, automated accessibility checks).
+- **Documentation and the detective question banks**: drafted with AI assistance and reviewed by the team.
+- **Home-page video**: generated with Google Gemini (video generation) and labelled "AI-generated video" on the page.
+- **Illustrations of the variables**: vector drawings made for this project.
+- No NASA logos, flags or mission identifiers were generated or modified.
