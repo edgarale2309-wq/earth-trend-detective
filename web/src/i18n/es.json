@@ -195,7 +195,9 @@
     "modeDone": "Modo {{mode}} activado",
     "modeWhereScientific": "Verás estadísticas adicionales (pendiente de Sen, valor p, z, t, R², intervalo de confianza) en la tarjeta «¿Es real este cambio?» del panel Gráficas.",
     "modeWhereExplorer": "La tarjeta «¿Es real este cambio?» del panel Gráficas muestra ahora solo el resumen en lenguaje sencillo, sin cifras estadísticas.",
-    "modeElsewhere": "Se aplica en la página de cada variable."
+    "modeElsewhere": "Se aplica en la página de cada variable.",
+    "focusedOn": "Mapa centrado en {{country}}",
+    "viewAll": "Ver toda América"
   },
   "chart": {
     "title": "Cómo cambió con el tiempo",

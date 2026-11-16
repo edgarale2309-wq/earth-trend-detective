@@ -23,14 +23,24 @@ t = np.arange(len(times))
 month = (t % 12) + 1
 
 
-def make(name: str, base: float, season_amp: float, noise: float, trend_pct_dec: float, hot=(19.4, -99.1)) -> None:
+CITIES = [(40.7, -74.0), (34.0, -118.2), (41.9, -87.6), (29.8, -95.4), (43.7, -79.4), (19.4, -99.1), (4.7, -74.1), (-12.0, -77.0),
+          (-23.5, -46.6), (-34.6, -58.4), (-33.4, -70.7), (10.5, -66.9), (9.0, -79.5), (23.1, -82.4)]
+
+
+def make(name: str, base: float, season_amp: float, noise: float, trend_pct_dec: float, urban: bool = False) -> None:
+    """Invented but plausible: a smooth continent-wide pattern of rising/falling trends (so every country shows
+    structure, not just Mexico), plus city hotspots for the pollutant. Marked synthetic_demo everywhere."""
     la, lo = np.meshgrid(lats, lons, indexing="ij")
-    d = np.hypot(la - hot[0], lo - hot[1])
-    spatial = np.exp(-d / 6.0)  # stronger signal near the hotspot, opposite sign far away
-    scale = base * (0.4 + spatial)
-    sign = np.where(d < 5, 1.0, -0.5)
+    if urban:
+        spatial = sum(np.exp(-np.hypot(la - c[0], lo - c[1]) / 4.0) for c in CITIES)
+        scale = base * (0.25 + 1.6 * np.clip(spatial, 0, 2.5))
+    else:
+        scale = base * (0.5 + 0.9 * np.clip(np.cos(np.deg2rad(la)) ** 2, 0, 1))  # wetter toward the tropics
+    # smooth field in [-1, 1]: where the trend is positive or negative, varying every ~20-30 degrees
+    field = 0.6 * np.sin(la / 17 + 1.3) * np.cos(lo / 23 - 0.7) + 0.4 * np.sin((la + 1.7 * lo) / 13)
+    field = np.clip(field * 1.4, -1, 1)
     season = season_amp * np.sin(2 * np.pi * (month - 3) / 12)[:, None, None]
-    slope = (trend_pct_dec / 100 / 120) * base * sign[None] * t[:, None, None]
+    slope = (trend_pct_dec / 100 / 120) * scale[None] * field[None] * t[:, None, None]
     arr = scale[None] + season * scale[None] / base + slope + rng.normal(0, noise, (len(t), *la.shape)) * scale[None] / base
     arr = np.clip(arr, 0, None).astype("float32")
     arr[:, ~LAND] = np.nan
@@ -40,5 +50,5 @@ def make(name: str, base: float, season_amp: float, noise: float, trend_pct_dec:
     print("wrote", name)
 
 
-make("surface_runoff", base=0.6, season_amp=0.4, noise=0.15, trend_pct_dec=-6)
-make("no2", base=3.0, season_amp=0.8, noise=0.5, trend_pct_dec=9)
+make("surface_runoff", base=0.6, season_amp=0.4, noise=0.15, trend_pct_dec=14)
+make("no2", base=3.0, season_amp=0.8, noise=0.5, trend_pct_dec=22, urban=True)

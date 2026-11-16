@@ -10,7 +10,8 @@ import { SeriesPanel } from '../trends/SeriesPanel'
 import { TrendMap } from '../trends/TrendMap'
 import { VariablePanel } from '../trends/VariablePanel'
 import { VerdictPanel } from '../trends/VerdictPanel'
-import { stateLabel } from '../../core/places'
+import { countryBounds, countryName, stateLabel } from '../../core/places'
+import { stateAt } from '../../core/stateAt'
 import { countryColor } from '../../core/variables'
 import { useGeoCountries, useGeoStates, useQueryParams, useSeries, useTrends } from './hooks'
 import { MAX_YEAR, MIN_YEAR, useExplorer } from './store'
@@ -52,7 +53,7 @@ function useUrlSync() {
 export default function ExplorerPage() {
   const { t, i18n } = useTranslation()
   useUrlSync()
-  const { variable, mode, point, state, set, region, start, end } = useExplorer()
+  const { variable, mode, point, state, set, region, start, end, focusCountry } = useExplorer()
   const q = useQueryParams()
   const trends = useTrends(q)
   const series = useSeries(q)
@@ -63,6 +64,29 @@ export default function ExplorerPage() {
   const [left, setLeft] = useState(w >= 1280)
   const [right, setRight] = useState(w >= 1280)
   const [asTable, setAsTable] = useState(false)
+  const [here, setHere] = useState<{ lat: number; lon: number } | null>(null)
+
+  // On the first visit of the session, ask where the visitor is and centre the map on their country.
+  // Not asked when the link already carries a place (state, point) or once it was answered.
+  useEffect(() => {
+    try {
+      const q = new URLSearchParams(window.location.search)
+      if (q.has('st') || q.has('lat') || sessionStorage.getItem('geoAsked')) return
+      sessionStorage.setItem('geoAsked', '1')
+    } catch { return }
+    navigator.geolocation?.getCurrentPosition(
+      (p) => setHere({ lat: p.coords.latitude, lon: p.coords.longitude }),
+      () => { /* declined or unavailable: the map stays on the whole continent */ },
+      { timeout: 15000, maximumAge: 600000 },
+    )
+  }, [])
+  useEffect(() => {
+    if (!here || !geo.data) return
+    const hit = stateAt(geo.data, here.lat, here.lon)
+    if (hit?.cc) set({ focusCountry: hit.cc, region: 'americas' })
+  }, [here, geo.data]) // eslint-disable-line react-hooks/exhaustive-deps
+  const focusBounds = focusCountry ? countryBounds(countries.data, focusCountry) : null
+
   const [big, setBig] = useState(false)
   const leftBefore = useRef(left)
 
@@ -99,7 +123,8 @@ export default function ExplorerPage() {
       <div className="p-3 sm:p-4 lg:h-[calc(100dvh-3.5rem)]">
         <div className="h-[82dvh] min-w-0 lg:h-full">
           <TrendMap
-            variable={variable} region={region} data={trends.data} geo={geo.data} countries={countries.data} loading={trends.isFetching || geo.isFetching} error={trends.error ?? geo.error}
+            variable={variable} region={region} focus={focusBounds} focusName={focusBounds && focusCountry ? countryName(focusCountry, i18n.language) : null}
+            onResetFocus={() => set({ focusCountry: null })} data={trends.data} geo={geo.data} countries={countries.data} loading={trends.isFetching || geo.isFetching} error={trends.error ?? geo.error}
             refetch={() => { trends.refetch(); geo.refetch() }} start={start} end={end}
             asTable={asTable}
             footer={<FilterBar asTable={asTable} onView={onView} />}

@@ -54,7 +54,7 @@ export function FilterBar({ asTable, onView }: { asTable: boolean; onView: (tabl
         <div className="w-60">
           <Label icon={MapPin} text={t('explorer.filterRegion')} tip={t('explorer.filterRegionTip')} />
           <select className="h-9 w-full rounded-lg border border-input-border bg-surface px-2 text-sm" value={region}
-            onChange={(e) => set({ region: e.target.value as typeof region, point: null, state: null })}>
+            onChange={(e) => set({ region: e.target.value as typeof region, point: null, state: null, focusCountry: null })}>
             {REGION_IDS.map((r) => <option key={r} value={r}>{t(`explorer.regions.${r}`)}</option>)}
           </select>
         </div>

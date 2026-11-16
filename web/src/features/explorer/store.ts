@@ -14,6 +14,8 @@ interface ExplorerState {
   deseasonalize: boolean
   point: { lat: number; lon: number } | null
   state: string | null
+  /** ISO country code the map is centred on (set from the visitor's location). */
+  focusCountry: string | null
   set: (p: Partial<Omit<ExplorerState, 'set'>>) => void
 }
 
@@ -30,5 +32,6 @@ export const useExplorer = create<ExplorerState>((set) => ({
   deseasonalize: true,
   point: null,
   state: null,
+  focusCountry: null,
   set: (p) => set(p),
 }))

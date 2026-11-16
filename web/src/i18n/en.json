@@ -195,7 +195,9 @@
     "modeDone": "{{mode}} mode on",
     "modeWhereScientific": "You will see extra statistics (Sen slope, p-value, z, t, R², confidence interval) in the “Is this change real?” card of the Charts panel.",
     "modeWhereExplorer": "The “Is this change real?” card of the Charts panel now shows only the plain-language summary, without the statistics.",
-    "modeElsewhere": "It applies on each variable’s page."
+    "modeElsewhere": "It applies on each variable’s page.",
+    "focusedOn": "Map centred on {{country}}",
+    "viewAll": "See all the Americas"
   },
   "chart": {
     "title": "How it changed over time",

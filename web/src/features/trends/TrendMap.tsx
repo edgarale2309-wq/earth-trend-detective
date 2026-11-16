@@ -54,9 +54,10 @@ function scaleMax(rows: StateRow[]): number {
   return a.length ? Math.max(a[Math.floor(a.length * 0.95)] ?? a[a.length - 1], 1e-9) : 1
 }
 
-export function TrendMap({ variable, region, data, geo, countries, loading, error, refetch, start, end, footer, left, right, asTable }: {
+export function TrendMap({ variable, region, focus, focusName, onResetFocus, data, geo, countries, loading, error, refetch, start, end, footer, left, right, asTable }: {
   asTable: boolean
   variable: VariableId; region: RegionId; data?: TrendsResponse; geo?: GeoJSON.FeatureCollection; countries?: GeoJSON.FeatureCollection
+  focus?: [[number, number], [number, number]] | null; focusName?: string | null; onResetFocus: () => void
   loading: boolean; error: unknown; refetch: () => void; start: number; end: number; footer: React.ReactNode
   left: DockedPanel; right: DockedPanel
 }) {
@@ -164,13 +165,13 @@ export function TrendMap({ variable, region, data, geo, countries, loading, erro
       m.addLayer({ id: 'country-borders', type: 'line', source: 'countries', paint: { 'line-color': '#8F6BA3', 'line-width': 0.8 } })
       m.addImage('nodata', nodataPattern())
       m.addSource('states', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
-      m.addLayer({ id: 'nodata', type: 'fill', source: 'states', filter: ['==', ['get', 'state'], 'insufficient'], paint: { 'fill-pattern': 'nodata' } })
+      m.addLayer({ id: 'nodata', type: 'fill', source: 'states', filter: ['all', ['==', ['get', 'state'], 'insufficient'], ['get', 'inRegion']], paint: { 'fill-pattern': 'nodata' } })
       m.addLayer({
-        id: 'states-fill', type: 'fill', source: 'states', filter: ['!=', ['get', 'state'], 'insufficient'],
-        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['case', ['!', ['get', 'inRegion']], 0.18, ['get', 'sig'], 0.95, 0.5] },
+        id: 'states-fill', type: 'fill', source: 'states', filter: ['all', ['!=', ['get', 'state'], 'insufficient'], ['get', 'inRegion']], // states outside the chosen zone are not painted at all
+        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['case', ['get', 'sig'], 0.95, 0.5] },
       })
       // state borders stay faint and thin; country borders are brighter and thicker so the hierarchy reads at a glance
-      m.addLayer({ id: 'states-border', type: 'line', source: 'states', paint: { 'line-color': '#C4B2CF', 'line-opacity': 0.28, 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.25, 6, 0.9] } })
+      m.addLayer({ id: 'states-border', type: 'line', source: 'states', paint: { 'line-color': '#C4B2CF', 'line-opacity': ['case', ['get', 'inRegion'], 0.28, 0.08], 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.25, 6, 0.9] } })
       m.addSource('countries-lines', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
       m.addLayer({ id: 'countries-casing', type: 'line', source: 'countries-lines', paint: { 'line-color': '#0A0612', 'line-opacity': 0.7, 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 2.4, 6, 5] }, layout: { 'line-join': 'round' } })
       m.addLayer({ id: 'countries-line', type: 'line', source: 'countries-lines', paint: { 'line-color': '#F4ECF7', 'line-opacity': 0.95, 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 1.1, 6, 2.6] }, layout: { 'line-join': 'round' } })
@@ -179,6 +180,8 @@ export function TrendMap({ variable, region, data, geo, countries, loading, erro
       m.addLayer({ id: 'sel', type: 'line', source: 'states', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': ['coalesce', ['get', 'selColor'], SELECTED], 'line-width': 3.5 }, layout: { 'line-join': 'round' } })
       ready.current = true
       applyRef.current()
+      pendingFit.current?.()
+      pendingFit.current = null
     })
     m.on('mousemove', 'states-fill', (e: maplibregl.MapLayerMouseEvent) => { m.getCanvas().style.cursor = 'pointer'; show(e) })
     m.on('mousemove', 'nodata', (e: maplibregl.MapLayerMouseEvent) => { m.getCanvas().style.cursor = 'pointer'; show(e) })
@@ -203,6 +206,26 @@ export function TrendMap({ variable, region, data, geo, countries, loading, erro
     [data],
   )
   const name = t(`vars.${variable}.name`)
+
+  // Fly to the chosen zone, or to the visitor's country when a location was shared. Skipped on the first paint of the whole continent.
+  const target = focus ?? REGION_BOUNDS[region]
+  const targetKey = JSON.stringify(target)
+  const firstFit = useRef(true)
+  const pendingFit = useRef<(() => void) | null>(null)
+  useEffect(() => {
+    if (firstFit.current) { firstFit.current = false; if (targetKey === JSON.stringify(VIEW)) return }
+    const go = () => {
+      const m = map.current
+      if (!m) return
+      const w = m.getContainer().clientWidth
+      const side = document.getElementById(right.id)
+      let lp = left.open ? 330 : 20
+      let rp = right.open && side ? side.offsetWidth + 50 : 20
+      if (lp + rp > w * 0.7) { lp = 20; rp = 20 } // never squeeze the map to nothing
+      m.fitBounds(target, { padding: { top: 24, bottom: 24, left: lp, right: rp }, duration: document.hidden ? 0 : 1100 })
+    }
+    if (ready.current) go(); else pendingFit.current = go // the style finishes loading asynchronously; applied right after
+  }, [targetKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const wrap = useRef<HTMLDivElement>(null)
   const hdr = useRef<HTMLDivElement>(null)
@@ -236,6 +259,12 @@ export function TrendMap({ variable, region, data, geo, countries, loading, erro
           </div>
           <p className="mt-1 text-xs text-ink-muted">{t('explorer.mapLegend', { unit })} · {start}–{end}</p>
         </div>
+        {focusName && (
+          <div className="flex items-center gap-2 text-xs text-ink-muted lg:ml-auto">
+            <span>{t('explorer.focusedOn', { country: focusName })}</span>
+            <button onClick={onResetFocus} className="h-8 rounded-full border border-input-border px-3 text-ink hover:bg-deep-purple">{t('explorer.viewAll')}</button>
+          </div>
+        )}
         {/* colour guide: centred over the map and large enough to actually be read */}
         <div className="order-last flex w-full items-center justify-center gap-3 lg:pointer-events-none lg:absolute lg:inset-x-0 lg:top-0 lg:order-none lg:w-auto">
           <span className="text-sm font-semibold text-ink">{t('explorer.mapLow')}</span>
