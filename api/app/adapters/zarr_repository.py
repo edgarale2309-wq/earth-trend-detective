@@ -17,7 +17,7 @@ class ZarrRepository(DatasetRepository):
     def available(self) -> list[str]:
         return sorted(p.stem for p in self.data_dir.glob("*.zarr"))
 
-    @lru_cache(maxsize=16)  # noqa: B019
+    @lru_cache(maxsize=2)  # noqa: B019  (each loaded variable is ~40 MB; the hosted instance has 512 MB)
     def load(self, variable: str) -> xr.Dataset:
         path = self.data_dir / f"{variable}.zarr"
         if not path.exists():

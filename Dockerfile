@@ -13,6 +13,9 @@ COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY api/ .
 COPY --from=web /web/dist ./static
-ENV PORT=8000
+# fewer malloc arenas keeps the resident memory low on a 512 MB instance
+ENV PORT=8000 \
+    MALLOC_ARENA_MAX=2 \
+    PYTHONUNBUFFERED=1
 EXPOSE 8000
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]

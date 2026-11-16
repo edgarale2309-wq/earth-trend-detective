@@ -48,12 +48,22 @@ def _slice(variable: str, region: str, start: int, end: int):
 
 
 def regional_series(da) -> pd.Series:
-    w = np.cos(np.deg2rad(da.lat)).broadcast_like(da).where(da.notnull())
-    m = (da * w).sum(("lat", "lon")) / w.sum(("lat", "lon"))
-    return pd.Series(m.values, index=pd.DatetimeIndex(da.time.values))
+    """Area-weighted mean over the region. Works in float32 and in 5-year chunks so a continent-wide mean never
+    needs more than a few MB (the hosted instance has 512 MB in total)."""
+    vals = da.values
+    w_lat = np.cos(np.deg2rad(da.lat.values)).astype("float32")[None, :, None]
+    out = np.full(vals.shape[0], np.nan, dtype="float64")
+    for i in range(0, vals.shape[0], 60):
+        chunk = vals[i:i + 60]
+        ok = np.isfinite(chunk)
+        w = ok * w_lat
+        den = w.sum(axis=(1, 2))
+        num = (np.where(ok, chunk, 0.0).astype("float32") * w).sum(axis=(1, 2))
+        out[i:i + 60] = np.where(den > 0, num / np.where(den > 0, den, 1), np.nan)
+    return pd.Series(out, index=pd.DatetimeIndex(da.time.values))
 
 
-@lru_cache(maxsize=8)
+@lru_cache(maxsize=2)  # one variable is ~40 MB; keep only the two most recent in memory
 def _cube(variable: str):
     """The whole variable as one in-memory array, so 600+ states do not each re-read the store."""
     ds, status = _load(variable)
@@ -68,7 +78,7 @@ def state_series(variable: str, state_id: str, start: int, end: int) -> tuple[pd
         raise AnalysisError(f"Unknown state '{state_id}'")
     ii, jj = mem[state_id]
     keep = (times.year >= start) & (times.year <= end)
-    vals = arr[keep][:, ii, jj]
+    vals = arr[:, ii, jj][keep]  # pick the state's cells first: never copy the whole cube per state
     w = np.cos(np.deg2rad(lats[ii]))[None, :] * np.isfinite(vals)
     mean = np.nansum(np.nan_to_num(vals) * w, axis=1) / np.where(w.sum(axis=1) == 0, np.nan, w.sum(axis=1))
     return pd.Series(mean, index=times[keep]), status
