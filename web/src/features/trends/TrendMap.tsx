@@ -5,7 +5,8 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { StateRow, TrendsResponse } from '../../core/api'
-import { REGION_BOUNDS, VARIABLES, divergingColor, legendGradient, type RegionId, type VariableId } from '../../core/variables'
+import { stateLabel } from '../../core/places'
+import { REGION_BOUNDS, VARIABLES, countryColor, divergingColor, legendGradient, type RegionId, type VariableId } from '../../core/variables'
 import { ErrorState, Skeleton } from '../../shared/States'
 import { fmt, fmtP } from '../explorer/hooks'
 import { useExplorer } from '../explorer/store'
@@ -15,6 +16,7 @@ maplibregl.setWorkerUrl(workerUrl)
 const OCEAN = '#0A1226'
 const LAND = '#2A2038'
 const HILITE = '#67E8F9'
+const SELECTED = '#FACC15' // gold: not used by any palette nor by the hover outline
 
 const STYLE: maplibregl.StyleSpecification = {
   version: 8, sources: {},
@@ -34,13 +36,8 @@ function center(g: GeoJSON.Geometry): [number, number] {
   return [(x0 + x1) / 2, (y0 + y1) / 2]
 }
 
-// The map opens on Mexico plus a little border; that is also the widest view allowed.
-const VIEW = REGION_BOUNDS.mexico
-
-function accentRgb() {
-  const v = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().split(/\s+/).join(',')
-  return `rgb(${v || '242,166,222'})`
-}
+// The map opens on the whole continent; that is also the widest view allowed.
+const VIEW = REGION_BOUNDS.americas
 
 function nodataPattern(): ImageData {
   const c = document.createElement('canvas')
@@ -57,13 +54,13 @@ function scaleMax(rows: StateRow[]): number {
   return a.length ? Math.max(a[Math.floor(a.length * 0.95)] ?? a[a.length - 1], 1e-9) : 1
 }
 
-export function TrendMap({ variable, region, data, geo, loading, error, refetch, start, end, footer, left, right, asTable }: {
+export function TrendMap({ variable, region, data, geo, countries, loading, error, refetch, start, end, footer, left, right, asTable }: {
   asTable: boolean
-  variable: VariableId; region: RegionId; data?: TrendsResponse; geo?: GeoJSON.FeatureCollection
+  variable: VariableId; region: RegionId; data?: TrendsResponse; geo?: GeoJSON.FeatureCollection; countries?: GeoJSON.FeatureCollection
   loading: boolean; error: unknown; refetch: () => void; start: number; end: number; footer: React.ReactNode
   left: DockedPanel; right: DockedPanel
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const tRef = useRef(t)
   tRef.current = t
   const box = useRef<HTMLDivElement>(null)
@@ -82,29 +79,32 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
     return {
       type: 'FeatureCollection' as const,
       features: geo.features.map((f) => {
-        const r = by.get(String((f.properties as { id: string }).id))
+        const fp = f.properties as { id: string; name: string; name_es?: string; cc?: string }
+        const r = by.get(String(fp.id))
         const [cx, cy] = center(f.geometry)
         const [[w, so], [e, n]] = REGION_BOUNDS[region]
         return {
           ...f,
           properties: {
-            id: r?.id ?? '', name: r?.name ?? '', state: r?.state ?? 'insufficient',
+            id: r?.id ?? '', name: r?.name ?? '', label: stateLabel(fp, i18n.language), selColor: countryColor(fp.cc), state: r?.state ?? 'insufficient',
             slope: r?.slope ?? null, pct: r?.pct ?? null, p: r?.p ?? null,
             color: r?.slope == null ? '#4A3D58' : divergingColor(palette, r.slope / max),
             sig: r?.state === 'rising' || r?.state === 'falling',
-            inRegion: region === 'mexico' || (cx >= w && cx <= e && cy >= so && cy <= n),
+            inRegion: region === 'americas' || (cx >= w && cx <= e && cy >= so && cy <= n),
           },
         }
       }),
     }
-  }, [geo, data, palette, max, region])
+  }, [geo, data, palette, max, region, i18n.language])
 
   const apply = () => {
     const m = map.current
     if (!m || !ready.current || !joined) return
     ;(m.getSource('states') as maplibregl.GeoJSONSource).setData(joined as never)
-    m.setPaintProperty('sel', 'line-color', accentRgb())
-    m.setFilter('sel', ['==', ['get', 'id'], selected ?? ''])
+    const f = ['==', ['get', 'id'], selected ?? ''] as maplibregl.FilterSpecification
+    m.setFilter('sel-casing', f)
+    m.setFilter('sel', f)
+    if (countries) (m.getSource('countries-lines') as maplibregl.GeoJSONSource | undefined)?.setData(countries as never)
   }
   const applyRef = useRef(apply)
   applyRef.current = apply
@@ -116,13 +116,13 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
       attributionControl: { compact: true }, dragRotate: false,
     })
     map.current = m
-    // Widest view = all of Mexico (with a bit of border); closest view = about one state.
+    // Widest view = the whole continent; closest view = a few states.
     let placed = false
     const fit = () => {
       const cam = m.cameraForBounds(VIEW, { padding: 8 })
       if (!cam || cam.zoom == null || !cam.center) return
       m.setMinZoom(cam.zoom)
-      m.setMaxZoom(cam.zoom + 2.3)
+      m.setMaxZoom(cam.zoom + 4.5)
       if (!placed) { m.jumpTo({ center: cam.center, zoom: cam.zoom }); placed = true }
     }
     const ro = new ResizeObserver(() => { m.resize(); fit() })
@@ -139,7 +139,7 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
       m.setFilter('hover', ['==', ['get', 'id'], String(p.id)])
       const el = document.createElement('div')
       el.style.cssText = 'font:13px Inter,sans-serif;color:#F4ECF7;display:grid;gap:6px'
-      const name = document.createElement('div'); name.style.cssText = 'font-weight:600;font-size:14px'; name.textContent = String(p.name)
+      const name = document.createElement('div'); name.style.cssText = 'font-weight:600;font-size:14px'; name.textContent = String(p.label ?? p.name)
       const datum = document.createElement('div'); datum.style.color = '#C4B2CF'
       const st = String(p.state)
       const amount = p.slope == null || p.slope === 'null' ? '—' : `${fmt(Number(p.slope))} ${unitRef.current} ${tt('explorer.perDecade')}`
@@ -156,9 +156,12 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
       fit()
       const [{ feature }, topo] = await Promise.all([import('topojson-client'), import('world-atlas/countries-50m.json')])
       const t0 = topo.default as unknown as { objects: { countries: never } }
-      m.addSource('countries', { type: 'geojson', data: feature(t0 as never, t0.objects.countries) as never, attribution: 'Natural Earth' })
+      // Russia, Fiji and Antarctica cross the antimeridian and draw streaks across the world view; they are far from the Americas anyway.
+      const world = feature(t0 as never, t0.objects.countries) as unknown as GeoJSON.FeatureCollection
+      world.features = world.features.filter((f) => !['Russia', 'Fiji', 'Antarctica'].includes(String((f.properties as { name?: string }).name)))
+      m.addSource('countries', { type: 'geojson', data: world as never, attribution: 'Natural Earth' })
       m.addLayer({ id: 'land', type: 'fill', source: 'countries', paint: { 'fill-color': LAND } })
-      m.addLayer({ id: 'country-borders', type: 'line', source: 'countries', paint: { 'line-color': '#8F6BA3', 'line-width': 1 } })
+      m.addLayer({ id: 'country-borders', type: 'line', source: 'countries', paint: { 'line-color': '#8F6BA3', 'line-width': 0.8 } })
       m.addImage('nodata', nodataPattern())
       m.addSource('states', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
       m.addLayer({ id: 'nodata', type: 'fill', source: 'states', filter: ['==', ['get', 'state'], 'insufficient'], paint: { 'fill-pattern': 'nodata' } })
@@ -166,9 +169,14 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
         id: 'states-fill', type: 'fill', source: 'states', filter: ['!=', ['get', 'state'], 'insufficient'],
         paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['case', ['!', ['get', 'inRegion']], 0.18, ['get', 'sig'], 0.95, 0.5] },
       })
-      m.addLayer({ id: 'states-border', type: 'line', source: 'states', paint: { 'line-color': '#C4B2CF', 'line-opacity': 0.4, 'line-width': 0.7 } })
+      // state borders stay faint and thin; country borders are brighter and thicker so the hierarchy reads at a glance
+      m.addLayer({ id: 'states-border', type: 'line', source: 'states', paint: { 'line-color': '#C4B2CF', 'line-opacity': 0.28, 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.25, 6, 0.9] } })
+      m.addSource('countries-lines', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+      m.addLayer({ id: 'countries-casing', type: 'line', source: 'countries-lines', paint: { 'line-color': '#0A0612', 'line-opacity': 0.7, 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 2.4, 6, 5] }, layout: { 'line-join': 'round' } })
+      m.addLayer({ id: 'countries-line', type: 'line', source: 'countries-lines', paint: { 'line-color': '#F4ECF7', 'line-opacity': 0.95, 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 1.1, 6, 2.6] }, layout: { 'line-join': 'round' } })
       m.addLayer({ id: 'hover', type: 'line', source: 'states', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': HILITE, 'line-width': 2.5 } })
-      m.addLayer({ id: 'sel', type: 'line', source: 'states', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': '#F2A6DE', 'line-width': 3 } })
+      m.addLayer({ id: 'sel-casing', type: 'line', source: 'states', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': '#0A0612', 'line-width': 7, 'line-opacity': 0.85 }, layout: { 'line-join': 'round' } })
+      m.addLayer({ id: 'sel', type: 'line', source: 'states', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': ['coalesce', ['get', 'selColor'], SELECTED], 'line-width': 3.5 }, layout: { 'line-join': 'round' } })
       ready.current = true
       applyRef.current()
     })
@@ -189,35 +197,52 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
 
   const unitRef = useRef(unit)
   unitRef.current = unit
-  useEffect(() => { apply() }, [joined, selected, variable]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { apply() }, [joined, selected, variable, countries]) // eslint-disable-line react-hooks/exhaustive-deps
   const rows = useMemo(
     () => [...(data?.states ?? [])].filter((r) => r.slope != null).sort((a, b) => Math.abs(b.slope!) - Math.abs(a.slope!)),
     [data],
   )
   const name = t(`vars.${variable}.name`)
 
+  const wrap = useRef<HTMLDivElement>(null)
+  const hdr = useRef<HTMLDivElement>(null)
+  const foot = useRef<HTMLDivElement>(null)
+  const [dims, setDims] = useState({ top: 80, foot: 0 })
+  useEffect(() => {
+    const measure = () => setDims({ top: (hdr.current?.offsetTop ?? 0) + (hdr.current?.offsetHeight ?? 60) + 20, foot: foot.current?.offsetHeight ?? 0 })
+    const ro = new ResizeObserver(measure)
+    if (hdr.current) ro.observe(hdr.current)
+    if (foot.current) ro.observe(foot.current)
+    measure()
+    return () => ro.disconnect()
+  }, [])
+
   return (
-    <section className="flex h-full min-h-[520px] flex-col rounded-2xl border border-purple/60 bg-transparent p-3 sm:p-4" aria-labelledby="map-h">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative flex items-center gap-1.5">
-          <h2 id="map-h" className="section-label">{t('explorer.map')}</h2>
-          <button onClick={() => setShowNote((v) => !v)} aria-expanded={showNote} aria-label={t('explorer.mapNote')} title={t('explorer.mapNote')}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted hover:bg-deep-purple hover:text-ink">
-            <Info size={16} aria-hidden />
-          </button>
-          {showNote && (
-            <div role="note" className="absolute left-0 top-full z-30 mt-1 w-[min(22rem,80vw)] rounded-xl border border-purple bg-deep-purple p-3 text-xs leading-relaxed text-ink">
-              {t('explorer.mapNoteText', { name: name.toLowerCase(), start, end })}
-            </div>
-          )}
+    <div ref={wrap} className="relative flex h-full min-h-[560px] flex-col">
+    <section className="flex min-h-0 flex-1 flex-col rounded-2xl border border-purple/60 bg-transparent p-3 sm:p-4" aria-labelledby="map-h">
+      <div ref={hdr} className="relative flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div>
+          <div className="relative flex items-center gap-1.5">
+            <h2 id="map-h" className="section-label">{t('explorer.map')}</h2>
+            <button onClick={() => setShowNote((v) => !v)} aria-expanded={showNote} aria-label={t('explorer.mapNote')} title={t('explorer.mapNote')}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted hover:bg-deep-purple hover:text-ink">
+              <Info size={16} aria-hidden />
+            </button>
+            {showNote && (
+              <div role="note" className="absolute left-0 top-full z-30 mt-1 w-[min(22rem,80vw)] rounded-xl border border-purple bg-deep-purple p-3 text-xs leading-relaxed text-ink">
+                {t('explorer.mapNoteText', { name: name.toLowerCase(), start, end })}
+              </div>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-ink-muted">{t('explorer.mapLegend', { unit })} · {start}–{end}</p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-ink-muted">
-          <span>{t('explorer.mapLow')}</span>
-          <span className="h-2.5 w-28 rounded-full" style={{ background: legendGradient(palette) }} aria-hidden />
-          <span>{t('explorer.mapHigh')}</span>
+        {/* colour guide: centred over the map and large enough to actually be read */}
+        <div className="order-last flex w-full items-center justify-center gap-3 lg:pointer-events-none lg:absolute lg:inset-x-0 lg:top-0 lg:order-none lg:w-auto">
+          <span className="text-sm font-semibold text-ink">{t('explorer.mapLow')}</span>
+          <span className="h-4 w-56 rounded-full border border-white/20 sm:w-80" style={{ background: legendGradient(palette) }} aria-hidden />
+          <span className="text-sm font-semibold text-ink">{t('explorer.mapHigh')}</span>
         </div>
       </div>
-      <p className="mt-1 text-xs text-ink-muted">{t('explorer.mapLegend', { unit })} · {start}–{end}</p>
 
       <div className="relative mt-3 min-h-[320px] flex-1 overflow-hidden rounded-xl" style={{ background: OCEAN }}>
         <div ref={box} role="img" aria-label={t('explorer.mapAlt')} style={{ position: 'absolute', inset: 0 }} className={asTable ? 'invisible' : ''} />
@@ -242,12 +267,19 @@ export function TrendMap({ variable, region, data, geo, loading, error, refetch,
             </table>
           </div>
         )}
-        <FloatingPanel side="left" panel={left} />
-        <FloatingPanel side="right" panel={right} />
         {error != null && !data && <div className="absolute inset-0 z-20 grid place-items-center bg-background p-4"><ErrorState error={error} onRetry={refetch} /></div>}
       </div>
-      {footer}
     </section>
+
+    {/* transparent dock that is only as wide as its filters */}
+    <div ref={foot} className="flex justify-center pt-2" style={{ paddingRight: asTable ? `calc(${right.open ? right.width : '0px'} + 3rem)` : undefined }}>{footer}</div>
+
+    {/* Panels live over the whole block: the charts column runs down beside the filter dock, the variable card stops above it. */}
+    <div className="pointer-events-none absolute inset-x-4 bottom-0 overflow-x-clip sm:inset-x-5" style={{ top: dims.top }}>
+      <FloatingPanel side="left" panel={left} maxH={`calc(100% - ${dims.foot}px - 4.5rem)`} />
+      <FloatingPanel side="right" panel={right} maxH={asTable ? '100%' : `calc(100% - ${dims.foot}px - 1rem)`} />
+    </div>
+    </div>
   )
 }
 
@@ -255,15 +287,15 @@ export interface DockedPanel { width: string; open: boolean; onToggle: () => voi
 
 /** A card floating over the map with a pull-tab fixed to its inner edge. Closing slides the card away
  *  but leaves the tab docked at the map border, so the control always lives on the panel it moves. */
-function FloatingPanel({ side, panel }: { side: 'left' | 'right'; panel: DockedPanel }) {
+function FloatingPanel({ side, panel, maxH }: { side: 'left' | 'right'; panel: DockedPanel; maxH: string }) {
   const isLeft = side === 'left'
   const Icon = isLeft ? (panel.open ? PanelLeftClose : PanelLeftOpen) : (panel.open ? PanelRightClose : PanelRightOpen)
   return (
     <div
-      className={`pointer-events-none absolute top-2 z-30 flex max-h-[calc(100%-1rem)] flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isLeft ? 'left-2' : 'right-2'}`}
+      className={`pointer-events-none absolute top-0 z-30 flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isLeft ? 'left-0' : 'right-0'}`}
       style={{
-        width: panel.width,
-        transform: panel.open ? 'translateX(0)' : `translateX(${isLeft ? 'calc(-100% - 8px)' : 'calc(100% + 8px)'})`,
+        width: panel.width, maxHeight: maxH,
+        transform: panel.open ? 'translateX(0)' : `translateX(${isLeft ? '-100%' : '100%'})`,
       }}
     >
       <div

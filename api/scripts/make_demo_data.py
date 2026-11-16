@@ -13,6 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from app.domain.catalog import GRID  # noqa: E402
 
+# Same land mask as the real NASA POWER data, so regional averages cover the same cells.
+LAND = np.isfinite(xr.open_zarr(ROOT / "data" / "precipitation.zarr")["value"].notnull().any("time").values)
 rng = np.random.default_rng(42)
 lats = np.arange(GRID["lat_min"], GRID["lat_max"] + 0.01, GRID["step"])
 lons = np.arange(GRID["lon_min"], GRID["lon_max"] + 0.01, GRID["step"])
@@ -31,6 +33,7 @@ def make(name: str, base: float, season_amp: float, noise: float, trend_pct_dec:
     slope = (trend_pct_dec / 100 / 120) * base * sign[None] * t[:, None, None]
     arr = scale[None] + season * scale[None] / base + slope + rng.normal(0, noise, (len(t), *la.shape)) * scale[None] / base
     arr = np.clip(arr, 0, None).astype("float32")
+    arr[:, ~LAND] = np.nan
     ds = xr.Dataset({"value": (("time", "lat", "lon"), arr)}, coords={"time": times, "lat": lats, "lon": lons},
                     attrs={"variable": name, "status": "synthetic_demo"})
     ds.to_zarr(ROOT / "data" / f"{name}.zarr", mode="w")

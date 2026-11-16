@@ -8,7 +8,9 @@ import { VARIABLES, type VariableId } from '../../core/variables'
 import { BackButton } from '../../shared/BackButton'
 import { DemoBadge, ErrorState, Skeleton } from '../../shared/States'
 import { ICONS } from '../../shared/VariableImage'
-import { fmt } from '../explorer/hooks'
+import { stateLabel } from '../../core/places'
+import { stateAt } from '../../core/stateAt'
+import { fmt, useGeoStates } from '../explorer/hooks'
 import { useExplorer } from '../explorer/store'
 import { SignificanceBadge } from '../trends/VerdictPanel'
 
@@ -16,17 +18,24 @@ const CITIES: Record<string, [number, number]> = {
   'Ciudad de México': [19.43, -99.13], Guadalajara: [20.67, -103.35], Monterrey: [25.67, -100.31],
   Mérida: [20.97, -89.62], Tijuana: [32.0, -117.0], Veracruz: [19.17, -96.13], Hermosillo: [29.07, -110.96],
   Oaxaca: [17.07, -96.72], 'Tuxtla Gutiérrez': [16.75, -93.12], Cancún: [21.16, -86.85],
+  'New York': [40.71, -74.0], 'Los Ángeles': [34.05, -118.24], Chicago: [41.88, -87.63], Houston: [29.76, -95.37],
+  Anchorage: [61.22, -149.9], Toronto: [43.65, -79.38], Vancouver: [49.28, -123.12], 'La Habana': [23.11, -82.37],
+  'Ciudad de Guatemala': [14.63, -90.51], 'Ciudad de Panamá': [8.98, -79.52], Bogotá: [4.71, -74.07], Caracas: [10.48, -66.9],
+  Quito: [-0.18, -78.47], Lima: [-12.05, -77.04], 'La Paz': [-16.5, -68.15], Manaos: [-3.12, -60.02], Brasilia: [-15.79, -47.88],
+  'São Paulo': [-23.55, -46.63], Santiago: [-33.45, -70.67], 'Buenos Aires': [-34.6, -58.38], Montevideo: [-34.9, -56.16],
 }
 const MY = '__me__'
 
 export default function PlacePage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const nav = useNavigate()
   const set = useExplorer((s) => s.set)
   const [choice, setChoice] = useState('Ciudad de México') // controlled, so the selector always shows what is analysed
   const [pt, setPt] = useState<[number, number]>(CITIES['Ciudad de México'])
   const [geo, setGeo] = useState<'idle' | 'busy' | 'ok' | 'denied' | 'error'>('idle')
   const [outside, setOutside] = useState(false)
+  const geoStates = useGeoStates()
+  const here = stateAt(geoStates.data, pt[0], pt[1])
   const q = useQuery({ queryKey: ['place', pt], queryFn: () => api.place(pt[0], pt[1]), staleTime: Infinity })
 
   const pick = (c: string) => {
@@ -40,7 +49,7 @@ export default function PlacePage() {
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const la = p.coords.latitude, lo = p.coords.longitude
-        setOutside(la < 14.5 || la > 32.5 || lo < -117.5 || lo > -86.5)
+        setOutside(la < -57 || la > 84 || lo < -170 || lo > -30)
         setPt([la, lo]); setChoice(MY); setGeo('ok')
       },
       (e) => setGeo(e.code === 1 ? 'denied' : 'error'),
@@ -49,14 +58,15 @@ export default function PlacePage() {
   }
 
   const open = (v: VariableId, c: { lat: number; lon: number }) => {
-    set({ variable: v, region: 'mexico', point: { lat: c.lat, lon: c.lon }, state: null })
-    nav(`/explore?v=${v}&r=mexico&lat=${c.lat}&lon=${c.lon}`)
+    // Open the explorer on the state this place belongs to, so the map outlines it and the panels name it.
+    if (here) { set({ variable: v, region: 'americas', point: null, state: here.id }); nav(`/explore?v=${v}&r=americas&st=${here.id}`) }
+    else { set({ variable: v, region: 'americas', point: { lat: c.lat, lon: c.lon }, state: null }); nav(`/explore?v=${v}&r=americas&lat=${c.lat}&lon=${c.lon}`) }
   }
 
   const counts = { rising: 0, falling: 0, no_trend: 0, insufficient: 0 }
   q.data?.rows.forEach((r) => { counts[r.stats.state] += 1 })
   const chips = [['rising', 'countRising'], ['falling', 'countFalling'], ['no_trend', 'countNone'], ['insufficient', 'countInsufficient']] as const
-  const placeName = choice === MY ? t('place.myLocation') : choice
+  const placeName = choice === MY ? (here ? stateLabel(here, i18n.language) : t('place.myLocation')) : choice
   const extra = [['readTitle', ListChecks], ['gridTitle', Grid3x3], ['tipTitle', Lightbulb]] as const
 
   return (
@@ -114,6 +124,7 @@ export default function PlacePage() {
           <section className="rounded-2xl border border-purple bg-surface p-5" aria-labelledby="pl-sum">
             <h2 id="pl-sum" className="section-label">{t('place.summaryTitle')}</h2>
             <p className="mt-2 font-display text-xl font-semibold">{placeName}</p>
+            {here && choice !== MY && <p className="mt-1 text-sm text-ink">{t('place.inState', { name: stateLabel(here, i18n.language) })}</p>}
             <p className="num mt-1 text-sm text-ink-muted">{t('place.coords')}: {pt[0].toFixed(2)}°, {pt[1].toFixed(2)}°</p>
             {q.data && <p className="mt-0.5 text-xs text-ink-muted">{t('place.cell', { lat: q.data.lat.toFixed(1), lon: q.data.lon.toFixed(1) })}</p>}
             {q.data && (

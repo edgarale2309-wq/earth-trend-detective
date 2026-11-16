@@ -22,7 +22,7 @@ export const MAX_YEAR = 2025
 
 export const useExplorer = create<ExplorerState>((set) => ({
   variable: 'home',
-  region: 'mexico',
+  region: 'americas',
   start: MIN_YEAR,
   end: MAX_YEAR,
   resolution: 'annual',

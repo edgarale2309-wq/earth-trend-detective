@@ -1,12 +1,15 @@
-"""Download monthly NASA POWER data on a 1-degree grid over Mexico and store one Zarr per variable.
+﻿"""Download monthly NASA POWER data on a 1-degree grid over the Americas and store one Zarr per variable.
 
-Run from api/:  python scripts/fetch_power.py
+Only land cells inside some state polygon are requested (~4.5k points). Use few threads: POWER throttles parallel requests.
+
+Run from api/:  python scripts/fetch_power.py [--cache-only]
 No Earthdata account needed. Raw per-point JSON is cached in data/_cache so reruns resume.
 """
 from __future__ import annotations
 
 import json
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -16,11 +19,13 @@ import xarray as xr
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from app.domain import states  # noqa: E402
 from app.domain.catalog import GRID, POWER_PARAMS  # noqa: E402
 
 CACHE = ROOT / "data" / "_cache"
 CACHE.mkdir(parents=True, exist_ok=True)
 START, END = 1984, 2025
+CACHE_ONLY = "--cache-only" in sys.argv  # rebuild the Zarr stores from what is already downloaded, no network
 URL = "https://power.larc.nasa.gov/api/temporal/monthly/point"
 PARAMS = ",".join(POWER_PARAMS.values())
 
@@ -29,27 +34,40 @@ def fetch_point(lat: float, lon: float) -> dict | None:
     f = CACHE / f"{lat:.1f}_{lon:.1f}.json"
     if f.exists():
         return json.loads(f.read_text())
+    if CACHE_ONLY:
+        return None
     q = dict(parameters=PARAMS, community="RE", longitude=lon, latitude=lat,
              start=START, end=END, format="JSON")
-    for _ in range(4):
+    for attempt in range(6):
         try:
-            r = requests.get(URL, params=q, timeout=90)
+            r = requests.get(URL, params=q, timeout=(10, 45))
             if r.status_code == 200:
                 data = r.json()["properties"]["parameter"]
                 f.write_text(json.dumps(data))
                 return data
         except requests.RequestException:
             pass
+        time.sleep(2 * (attempt + 1))  # back off: POWER throttles bursts
     return None
 
 
 def main() -> None:
     lats = np.arange(GRID["lat_min"], GRID["lat_max"] + 0.01, GRID["step"])
     lons = np.arange(GRID["lon_min"], GRID["lon_max"] + 0.01, GRID["step"])
-    pts = [(float(a), float(o)) for a in lats for o in lons]
+    pts = [(float(lats[i]), float(lons[j])) for i, j in sorted(states.land_cells())]
     print(f"{len(pts)} points", flush=True)
-    with ThreadPoolExecutor(8) as ex:
-        results = list(ex.map(lambda p: fetch_point(*p), pts))
+    done = 0
+
+    def job(p):
+        nonlocal done
+        r = fetch_point(*p)
+        done += 1
+        if done % 200 == 0:
+            print(f"  {done}/{len(pts)}", flush=True)
+        return r
+
+    with ThreadPoolExecutor(3) as ex:
+        results = list(ex.map(job, pts))
     ok = sum(r is not None for r in results)
     print(f"downloaded {ok}/{len(pts)}", flush=True)
 
@@ -76,3 +94,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

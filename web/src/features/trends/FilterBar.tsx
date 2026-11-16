@@ -29,7 +29,7 @@ function PeriodSlider() {
   const pct = (v: number) => ((v - MIN_YEAR) / (MAX_YEAR - MIN_YEAR)) * 100
   const thumb = 'pointer-events-none absolute inset-0 h-9 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto'
   return (
-    <div>
+    <div className="w-64">
       <Label icon={CalendarRange} text={t('explorer.filterPeriod')} tip={t('explorer.filterPeriodTip')} />
       <div className="relative h-9" style={{ accentColor: 'rgb(var(--accent))' }}>
         <div className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded bg-deep-purple" />
@@ -49,9 +49,9 @@ export function FilterBar({ asTable, onView }: { asTable: boolean; onView: (tabl
   const { t } = useTranslation()
   const { region, resolution, start, end, set } = useExplorer()
   return (
-    <div className="mx-auto mt-1 w-full max-w-5xl">
-      <div role="group" aria-label={t('explorer.filters')} className="grid gap-4 px-2 py-2 sm:grid-cols-2 sm:items-start lg:grid-cols-[1fr_auto_auto_1.2fr]">
-        <div>
+    <div className="w-fit max-w-full">
+      <div role="group" aria-label={t('explorer.filters')} className="flex flex-wrap items-start justify-center gap-x-6 gap-y-3 py-1">
+        <div className="w-60">
           <Label icon={MapPin} text={t('explorer.filterRegion')} tip={t('explorer.filterRegionTip')} />
           <select className="h-9 w-full rounded-lg border border-input-border bg-surface px-2 text-sm" value={region}
             onChange={(e) => set({ region: e.target.value as typeof region, point: null, state: null })}>
@@ -82,7 +82,7 @@ export function FilterBar({ asTable, onView }: { asTable: boolean; onView: (tabl
         </div>
         <PeriodSlider />
       </div>
-      <p className="mt-2 text-center text-xs leading-relaxed text-ink-muted" aria-live="polite">
+      <p className="mt-2 w-0 min-w-full text-center text-xs leading-relaxed text-ink-muted" aria-live="polite">
         {t('explorer.filterSummary', {
           region: t(`explorer.regions.${region}`), unit: t(resolution === 'monthly' ? 'chart.unitMonth' : 'chart.unitYear'), start, end,
         })}

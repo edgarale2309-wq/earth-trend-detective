@@ -22,7 +22,7 @@
   "home": {
     "eyebrow": "NASA Space Apps Challenge 2026",
     "title": "Descubre qué cambia en la Tierra, dónde y si es real.",
-    "lead": "Earth Trend Detective convierte años de datos de satélites y modelos de la NASA en respuestas claras. Elige una variable, mira dónde sube o baja en México y averigua si el cambio es real o solo variación natural.",
+    "lead": "Earth Trend Detective convierte años de datos de satélites y modelos de la NASA en respuestas claras. Elige una variable, mira dónde sube o baja en América y averigua si el cambio es real o solo variación natural.",
     "showTitle": "Qué mostramos",
     "showText": "Mapas por estado, series de tiempo con línea de tendencia y un veredicto en lenguaje sencillo. Cada número incluye sus unidades, periodo y fuente.",
     "useTitle": "Para qué sirve",
@@ -146,7 +146,7 @@
     "mapLow": "Bajo",
     "mapHigh": "Alto",
     "mapLegend": "Cambio en {{unit}} por década",
-    "mapAlt": "Mapa de México coloreado por la tendencia de cada estado.",
+    "mapAlt": "Mapa de América coloreado por la tendencia de cada estado, provincia o departamento.",
     "mapTable": "Ver como tabla",
     "mapChart": "Ver como mapa",
     "tableState": "Estado",
@@ -161,6 +161,10 @@
     "perDecade": "por década",
     "methodLink": "Cómo lo probamos",
     "regions": {
+      "americas": "América (todo el continente)",
+      "north_america": "Norteamérica (Canadá, EE. UU., México)",
+      "central_caribbean": "Centroamérica y el Caribe",
+      "south_america": "Sudamérica",
       "mexico": "México (todo)",
       "desert": "Desierto (Sonora)",
       "rainforest": "Selva (Chiapas)",
@@ -186,7 +190,12 @@
     "viewMap": "Mapa",
     "viewTable": "Tabla",
     "enlarge": "Ampliar gráficas",
-    "shrink": "Reducir gráficas"
+    "shrink": "Reducir gráficas",
+    "modeBusy": "Cambiando a modo {{mode}}…",
+    "modeDone": "Modo {{mode}} activado",
+    "modeWhereScientific": "Verás estadísticas adicionales (pendiente de Sen, valor p, z, t, R², intervalo de confianza) en la tarjeta «¿Es real este cambio?» del panel Gráficas.",
+    "modeWhereExplorer": "La tarjeta «¿Es real este cambio?» del panel Gráficas muestra ahora solo el resumen en lenguaje sencillo, sin cifras estadísticas.",
+    "modeElsewhere": "Se aplica en la página de cada variable."
   },
   "chart": {
     "title": "Cómo cambió con el tiempo",
@@ -263,7 +272,7 @@
     "title": "Reto detective",
     "introTitle": "Cómo funciona el reto",
     "introLead": "Los datos reales esconden historias reales. ¿Puedes verlas antes que los números?",
-    "i1": "Te mostramos una variable y una región de México.",
+    "i1": "Te mostramos una variable y una región de América.",
     "i2": "Tú adivinas: ¿sube, baja o no hay tendencia clara?",
     "i3": "Revelamos qué dicen los datos de la NASA, con la tasa de cambio y qué tan seguros estamos.",
     "i4": "Seis casos, uno por variable. Tu puntaje muestra qué tan bien lees las señales de la naturaleza.",
@@ -293,7 +302,7 @@
     "pick": "Elige una ciudad",
     "geo": "Usar mi ubicación",
     "geoError": "No pudimos leer tu ubicación.",
-    "outside": "Esta herramienta cubre México. Se muestra la celda más cercana.",
+    "outside": "Esta herramienta cubre América. Se muestra la celda más cercana.",
     "cell": "Celda más cercana: {{lat}}°, {{lon}}°",
     "myLocation": "Mi ubicación",
     "locating": "Buscando tu ubicación…",
@@ -313,7 +322,8 @@
     "gridTitle": "Sobre la resolución",
     "gridText": "Los datos vienen en una malla de aproximadamente 1° (≈110 km). Tu punto se asigna a la celda más cercana, así que los valores describen el área alrededor, no una calle exacta.",
     "tipTitle": "Consejo",
-    "tipText": "Prueba dos lugares muy distintos, como Mérida y Hermosillo, y compara qué variables cambian en cada uno."
+    "tipText": "Prueba dos lugares muy distintos, como Mérida y Hermosillo, y compara qué variables cambian en cada uno.",
+    "inState": "Estado: {{name}}"
   },
   "info": {
     "title": "Más información",

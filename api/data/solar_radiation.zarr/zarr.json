@@ -11,14 +11,14 @@
     "metadata": {
       "lat": {
         "shape": [
-          18
+          141
         ],
         "data_type": "float64",
         "chunk_grid": {
           "name": "regular",
           "configuration": {
             "chunk_shape": [
-              18
+              141
             ]
           }
         },
@@ -56,14 +56,14 @@
       },
       "lon": {
         "shape": [
-          31
+          137
         ],
         "data_type": "float64",
         "chunk_grid": {
           "name": "regular",
           "configuration": {
             "chunk_shape": [
-              31
+              137
             ]
           }
         },
@@ -148,17 +148,17 @@
       "value": {
         "shape": [
           504,
-          18,
-          31
+          141,
+          137
         ],
         "data_type": "float32",
         "chunk_grid": {
           "name": "regular",
           "configuration": {
             "chunk_shape": [
-              252,
-              9,
-              31
+              126,
+              36,
+              35
             ]
           }
         },

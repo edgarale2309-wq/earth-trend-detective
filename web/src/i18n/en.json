@@ -22,7 +22,7 @@
   "home": {
     "eyebrow": "NASA Space Apps Challenge 2026",
     "title": "Find what's changing on Earth, where, and if it's real.",
-    "lead": "Earth Trend Detective turns years of NASA satellite and model data into clear answers. Pick a variable, see where it is rising or falling across Mexico, and learn whether the change is real or just natural ups and downs.",
+    "lead": "Earth Trend Detective turns years of NASA satellite and model data into clear answers. Pick a variable, see where it is rising or falling across the Americas, and learn whether the change is real or just natural ups and downs.",
     "showTitle": "What we show",
     "showText": "Maps by state, time series with a trend line, and a plain-language verdict. Every number comes with its units, period and source.",
     "useTitle": "What it is useful for",
@@ -146,7 +146,7 @@
     "mapLow": "Low",
     "mapHigh": "High",
     "mapLegend": "Change in {{unit}} per decade",
-    "mapAlt": "Map of Mexico colored by trend in each state.",
+    "mapAlt": "Map of the Americas colored by trend in each state, province or department.",
     "mapTable": "Show as table",
     "mapChart": "Show as map",
     "tableState": "State",
@@ -161,6 +161,10 @@
     "perDecade": "per decade",
     "methodLink": "How we test this",
     "regions": {
+      "americas": "The Americas (all)",
+      "north_america": "North America (Canada, USA, Mexico)",
+      "central_caribbean": "Central America & Caribbean",
+      "south_america": "South America",
       "mexico": "Mexico (all)",
       "desert": "Desert (Sonora)",
       "rainforest": "Rainforest (Chiapas)",
@@ -186,7 +190,12 @@
     "viewMap": "Map",
     "viewTable": "Table",
     "enlarge": "Enlarge charts",
-    "shrink": "Shrink charts"
+    "shrink": "Shrink charts",
+    "modeBusy": "Switching to {{mode}} mode…",
+    "modeDone": "{{mode}} mode on",
+    "modeWhereScientific": "You will see extra statistics (Sen slope, p-value, z, t, R², confidence interval) in the “Is this change real?” card of the Charts panel.",
+    "modeWhereExplorer": "The “Is this change real?” card of the Charts panel now shows only the plain-language summary, without the statistics.",
+    "modeElsewhere": "It applies on each variable’s page."
   },
   "chart": {
     "title": "How it changed over time",
@@ -263,7 +272,7 @@
     "title": "Detective challenge",
     "introTitle": "How the challenge works",
     "introLead": "Real data hides real stories. Can you spot them before the numbers do?",
-    "i1": "We show you one variable and one region of Mexico.",
+    "i1": "We show you one variable and one region of the Americas.",
     "i2": "You guess: is it rising, falling, or is there no clear trend?",
     "i3": "We reveal what the NASA data say, with the rate of change and how sure we are.",
     "i4": "Six cases, one per variable. Your score shows how well you read nature's signals.",
@@ -293,7 +302,7 @@
     "pick": "Choose a city",
     "geo": "Use my location",
     "geoError": "We couldn't read your location.",
-    "outside": "This tool covers Mexico. Showing the nearest grid cell.",
+    "outside": "This tool covers the Americas. Showing the nearest grid cell.",
     "cell": "Nearest grid cell: {{lat}}°, {{lon}}°",
     "myLocation": "My location",
     "locating": "Locating you…",
@@ -313,7 +322,8 @@
     "gridTitle": "About the resolution",
     "gridText": "Data come on a grid of about 1° (≈110 km). Your point is matched to the nearest grid cell, so values describe the surrounding area, not an exact street.",
     "tipTitle": "Tip",
-    "tipText": "Try two very different places, such as Mérida and Hermosillo, and compare which variables change in each."
+    "tipText": "Try two very different places, such as Mérida and Hermosillo, and compare which variables change in each.",
+    "inState": "State: {{name}}"
   },
   "info": {
     "title": "More information",

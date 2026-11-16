@@ -38,9 +38,9 @@ The cached datasets (`api/data/*.zarr`, about 4 MB) are committed, so the app wo
 Real ingestion for GLDAS and OMI is in `api/scripts/preprocess_earthdata.py`. It is written but **has not been run**: it needs Earthdata credentials in `api/.env`.
 Once its output replaces a demo file, the badge disappears (the dataset's `status` attribute becomes `nasa`).
 
-The map shows Mexican states (Natural Earth admin-1, `api/data/mexico_states.geojson`, rebuilt with `python scripts/build_states.py`). Each state is the area-weighted mean of the 1° grid cells whose centre falls inside it; very small states use their nearest cell. FDR correction runs across states.
+The map shows the states, provinces and departments of the whole Americas (669 areas in 49 countries; Natural Earth admin-1, `api/data/americas_states.geojson` plus country outlines in `americas_countries.geojson`, rebuilt with `python scripts/build_states.py`). Each state is the area-weighted mean of the 1° grid cells whose centre falls inside it; very small states use their nearest cell. FDR correction runs across states.
 
-Refresh the real data: `python scripts/fetch_power.py` (558 grid points over Mexico at 1°, no account needed, resumable).
+Refresh the real data: `python scripts/fetch_power.py` (~4,500 land grid points over the Americas at 1°, no account needed, resumable, ~40 min because NASA POWER throttles parallel requests).
 
 ## Method
 

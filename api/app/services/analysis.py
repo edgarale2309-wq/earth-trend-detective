@@ -47,28 +47,35 @@ def regional_series(da) -> pd.Series:
     return pd.Series(m.values, index=pd.DatetimeIndex(da.time.values))
 
 
-def state_series(variable: str, state_id: str, start: int, end: int) -> tuple[pd.Series, str]:
+@lru_cache(maxsize=8)
+def _cube(variable: str):
+    """The whole variable as one in-memory array, so 600+ states do not each re-read the store."""
     ds, status = _load(variable)
+    return ds["value"].values, ds["lat"].values, pd.DatetimeIndex(ds["time"].values), status
+
+
+def state_series(variable: str, state_id: str, start: int, end: int) -> tuple[pd.Series, str]:
+    arr, lats, times, status = _cube(variable)
     mem = st.membership()
     if state_id not in mem:
         raise AnalysisError(f"Unknown state '{state_id}'")
     ii, jj = mem[state_id]
-    da = ds["value"].sel(time=slice(f"{start}-01-01", f"{end}-12-31"))
-    vals = da.values[:, ii, jj]
-    w = np.cos(np.deg2rad(da.lat.values[ii]))[None, :] * np.isfinite(vals)
+    keep = (times.year >= start) & (times.year <= end)
+    vals = arr[keep][:, ii, jj]
+    w = np.cos(np.deg2rad(lats[ii]))[None, :] * np.isfinite(vals)
     mean = np.nansum(np.nan_to_num(vals) * w, axis=1) / np.where(w.sum(axis=1) == 0, np.nan, w.sum(axis=1))
-    return pd.Series(mean, index=pd.DatetimeIndex(da.time.values)), status
+    return pd.Series(mean, index=times[keep]), status
 
 
 @lru_cache(maxsize=256)
 def trends(variable: str, region: str, start: int, end: int, resolution: str) -> dict:
     da, status = _slice(variable, region, start, end)
     summary = ts.analyze_series(regional_series(da), resolution)
-    names = st.names()
+    names, countries = st.names(), st.countries_of()
     results = {sid: ts.analyze_series(state_series(variable, sid, start, end)[0], resolution) for sid in names}
     ts.fdr_classify(results)
     rows = [{
-        "id": sid, "name": names[sid], "state": r.state, "n_cells": len(st.membership()[sid][0]),
+        "id": sid, "name": names[sid], "cc": countries[sid], "state": r.state, "n_cells": len(st.membership()[sid][0]),
         "slope": None if r.sen_slope_per_decade is None else round(r.sen_slope_per_decade, 5),
         "pct": None if r.pct_per_decade is None else round(r.pct_per_decade, 3),
         "p": None if r.p_value is None else round(r.p_value, 5),
@@ -83,11 +90,11 @@ def trends(variable: str, region: str, start: int, end: int, resolution: str) ->
 
 def series(variable: str, region: str, start: int, end: int, resolution: str, deseasonalize: bool,
            lat: float | None = None, lon: float | None = None, state: str | None = None) -> dict:
-    da, status = _slice(variable, "mexico" if (lat is not None or state) else region, start, end)
+    da, status = _slice(variable, "americas" if (lat is not None or state) else region, start, end)
     place = None
     if state:
         s, _ = state_series(variable, state, start, end)
-        place = {"state": state, "name": st.names().get(state, state)}
+        place = {"state": state, "name": st.names().get(state, state), "cc": st.countries_of().get(state)}
     elif lat is not None and lon is not None:
         pt = da.sel(lat=lat, lon=lon, method="nearest")
         s = pd.Series(pt.values, index=pd.DatetimeIndex(pt.time.values))

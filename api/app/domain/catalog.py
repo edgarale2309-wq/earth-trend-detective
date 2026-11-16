@@ -1,7 +1,8 @@
 """Static catalog of the six variables and preset regions."""
 from __future__ import annotations
 
-GRID = {"lat_min": 15.0, "lat_max": 32.0, "lon_min": -117.0, "lon_max": -87.0, "step": 1.0}
+# 2-degree grid over the whole Americas (~220 km at the equator); only land cells near a state are downloaded.
+GRID = {"lat_min": -56.0, "lat_max": 84.0, "lon_min": -170.0, "lon_max": -34.0, "step": 1.0}
 
 # variable id -> NASA POWER parameter (real data pulled by scripts/fetch_power.py)
 POWER_PARAMS = {
@@ -40,6 +41,10 @@ VARIABLES = {
 
 # bbox = (lat_min, lat_max, lon_min, lon_max)
 REGIONS = {
+    "americas": {"bbox": (-57, 84, -170, -30), "point": (10.0, -80.0)},
+    "north_america": {"bbox": (14, 84, -170, -50), "point": (45.0, -100.0)},
+    "central_caribbean": {"bbox": (6, 24, -93, -58), "point": (15.0, -80.0)},
+    "south_america": {"bbox": (-57, 13, -82, -34), "point": (-15.0, -60.0)},
     "mexico": {"bbox": (15, 32, -117, -87), "point": (23.6, -102.5)},
     "desert": {"bbox": (28, 32, -115, -108), "point": (30.0, -111.0)},
     "rainforest": {"bbox": (16, 19, -94, -89), "point": (17.5, -91.5)},

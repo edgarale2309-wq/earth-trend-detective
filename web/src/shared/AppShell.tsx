@@ -1,5 +1,6 @@
-import { BookOpen, House, Languages, MapPin, Menu, Search, Share2, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { BookOpen, Check, House, LoaderCircle, Languages, MapPin, Menu, Search, Share2, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { VARIABLE_IDS, VARIABLES } from '../core/variables'
@@ -8,17 +9,49 @@ import { ICONS } from './VariableImage'
 
 function ModeToggle() {
   const { t } = useTranslation()
+  const loc = useLocation()
   const mode = useExplorer((s) => s.mode)
   const set = useExplorer((s) => s.set)
+  const [toast, setToast] = useState<{ mode: 'explorer' | 'scientific'; phase: 'busy' | 'done' } | null>(null)
+  const timers = useRef<number[]>([])
+  useEffect(() => () => timers.current.forEach(clearTimeout), [])
+
+  const choose = (m: 'explorer' | 'scientific') => {
+    if (m === mode) return
+    timers.current.forEach(clearTimeout)
+    set({ mode: m })
+    setToast({ mode: m, phase: 'busy' })
+    timers.current = [
+      window.setTimeout(() => setToast({ mode: m, phase: 'done' }), 700),
+      window.setTimeout(() => setToast(null), 7000),
+    ]
+  }
+  const name = toast ? t(`explorer.${toast.mode}`) : ''
   return (
-    <div role="group" aria-label={t('explorer.mode')} className="flex shrink-0 rounded-lg border border-purple p-0.5">
-      {(['explorer', 'scientific'] as const).map((m) => (
-        <button
-          key={m} onClick={() => set({ mode: m })} aria-pressed={mode === m}
-          className={`h-9 rounded-lg px-3 text-sm transition-colors duration-150 ${mode === m ? 'bg-crimson text-white' : 'text-ink-muted hover:bg-deep-purple hover:text-ink'}`}
-        >{t(`explorer.${m}`)}</button>
-      ))}
-    </div>
+    <>
+      <div role="group" aria-label={t('explorer.mode')} className="flex shrink-0 rounded-lg border border-purple p-0.5">
+        {(['explorer', 'scientific'] as const).map((m) => (
+          <button
+            key={m} onClick={() => choose(m)} aria-pressed={mode === m}
+            className={`h-9 rounded-lg px-3 text-sm transition-colors duration-150 ${mode === m ? 'bg-crimson text-white' : 'text-ink-muted hover:bg-deep-purple hover:text-ink'}`}
+          >{t(`explorer.${m}`)}</button>
+        ))}
+      </div>
+      {toast && createPortal(
+        <div role="status" aria-live="polite" className="fixed bottom-6 left-1/2 z-[90] flex w-[min(30rem,calc(100vw-2rem))] -translate-x-1/2 items-start gap-3 rounded-2xl border border-purple bg-deep-purple p-4 shadow-[0_12px_40px_rgba(0,0,0,0.6)]">
+          {toast.phase === 'busy' ? <LoaderCircle size={20} aria-hidden className="mt-0.5 shrink-0 animate-spin text-ink" /> : <Check size={20} aria-hidden className="mt-0.5 shrink-0 text-ink" />}
+          <div className="min-w-0 text-sm leading-relaxed">
+            <p className="font-semibold text-ink">{toast.phase === 'busy' ? t('explorer.modeBusy', { mode: name.toLowerCase() }) : t('explorer.modeDone', { mode: name })}</p>
+            {toast.phase === 'done' && (
+              <p className="mt-1 text-ink-muted">
+                {t(toast.mode === 'scientific' ? 'explorer.modeWhereScientific' : 'explorer.modeWhereExplorer')}
+                {loc.pathname !== '/explore' && ` ${t('explorer.modeElsewhere')}`}
+              </p>
+            )}
+          </div>
+          <button onClick={() => setToast(null)} aria-label={t('nav.close')} className="-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-ink-muted hover:bg-purple hover:text-ink"><X size={16} aria-hidden /></button>
+        </div>, document.body)}
+    </>
   )
 }
 

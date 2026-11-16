@@ -1,4 +1,4 @@
-import { Maximize2, Minimize2 } from 'lucide-react'
+import { Maximize2, Minimize2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
@@ -10,7 +10,9 @@ import { SeriesPanel } from '../trends/SeriesPanel'
 import { TrendMap } from '../trends/TrendMap'
 import { VariablePanel } from '../trends/VariablePanel'
 import { VerdictPanel } from '../trends/VerdictPanel'
-import { useGeoStates, useQueryParams, useSeries, useTrends } from './hooks'
+import { stateLabel } from '../../core/places'
+import { countryColor } from '../../core/variables'
+import { useGeoCountries, useGeoStates, useQueryParams, useSeries, useTrends } from './hooks'
 import { MAX_YEAR, MIN_YEAR, useExplorer } from './store'
 
 function useUrlSync() {
@@ -48,13 +50,14 @@ function useUrlSync() {
 }
 
 export default function ExplorerPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   useUrlSync()
   const { variable, mode, point, state, set, region, start, end } = useExplorer()
   const q = useQueryParams()
   const trends = useTrends(q)
   const series = useSeries(q)
   const geo = useGeoStates()
+  const countries = useGeoCountries()
   useAccent(variable)
   const w = typeof window === 'undefined' ? 1440 : window.innerWidth
   const [left, setLeft] = useState(w >= 1280)
@@ -72,6 +75,7 @@ export default function ExplorerPage() {
   const toggleBig = () => { setBig((v) => !v); setLeft(false); setRight(true) }
   const LEFT_W = 'min(312px, 80vw)'
   // Charts sit side by side; they share the map width with the variable card when both are open.
+  // Charts and verdict sit side by side (table view stacks them in a narrow column); "enlarge" uses the full width.
   const rightW = asTable ? 'min(400px, 84vw)'
     : big ? 'calc(100% - 4.5rem)'
     : `min(880px, calc(100% - ${left ? '312px' : '0px'} - 5rem))`
@@ -84,7 +88,8 @@ export default function ExplorerPage() {
   const name = t(`vars.${variable}.name`)
   const status = trends.data?.data_status ?? series.data?.data_status
   const offline = typeof navigator !== 'undefined' && !navigator.onLine
-  const stateName = state ? (trends.data?.states.find((r) => r.id === state)?.name ?? series.data?.point?.name ?? state) : null
+  const picked = state ? (geo.data?.features.find((f) => (f.properties as { id: string }).id === state)?.properties as { name: string; name_es?: string; cc?: string } | undefined) : undefined
+  const stateName = state ? (picked ? stateLabel(picked, i18n.language) : (series.data?.point?.name ?? state)) : null
   const placeLabel = stateName
     ?? (point ? `${point.lat.toFixed(1)}°, ${point.lon.toFixed(1)}°` : t('chart.placeRegion', { region: t(`explorer.regions.${region}`) }))
 
@@ -94,7 +99,7 @@ export default function ExplorerPage() {
       <div className="p-3 sm:p-4 lg:h-[calc(100dvh-3.5rem)]">
         <div className="h-[82dvh] min-w-0 lg:h-full">
           <TrendMap
-            variable={variable} region={region} data={trends.data} geo={geo.data} loading={trends.isFetching || geo.isFetching} error={trends.error ?? geo.error}
+            variable={variable} region={region} data={trends.data} geo={geo.data} countries={countries.data} loading={trends.isFetching || geo.isFetching} error={trends.error ?? geo.error}
             refetch={() => { trends.refetch(); geo.refetch() }} start={start} end={end}
             asTable={asTable}
             footer={<FilterBar asTable={asTable} onView={onView} />}
@@ -110,8 +115,11 @@ export default function ExplorerPage() {
                 <div className="@container flex flex-col gap-3">
                   <div className="flex flex-wrap items-center gap-2">
                     {stateName && (
-                      <button onClick={() => set({ state: null, point: null })} className="h-9 rounded-full border border-input-border bg-surface px-3 text-xs text-ink hover:bg-deep-purple">
-                        {t('explorer.selectedState', { name: stateName })} · {t('explorer.clearSelection')}
+                      <button onClick={() => set({ state: null, point: null })} title={t('explorer.clearSelection')}
+                        className="inline-flex min-h-9 min-w-0 max-w-full items-center gap-2 rounded-full border border-input-border bg-surface py-1 pl-3 pr-1.5 text-left text-xs text-ink hover:bg-deep-purple">
+                        <span aria-hidden className="h-3 w-3 shrink-0 rounded-full border border-white/40" style={{ background: countryColor(picked?.cc) }} />
+                        <span className="truncate">{t('explorer.selectedState', { name: stateName })}</span>
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-deep-purple px-2 py-1"><X size={12} aria-hidden />{t('explorer.clearSelection')}</span>
                       </button>
                     )}
                     {!asTable && (
@@ -122,7 +130,7 @@ export default function ExplorerPage() {
                     )}
                   </div>
                   <div className="grid items-start gap-3 @2xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-                    <SeriesPanel variable={variable} data={series.data} loading={series.isFetching} error={series.error} refetch={() => series.refetch()} placeLabel={placeLabel} name={name} chartHeight={big ? 460 : 300} />
+                    <SeriesPanel variable={variable} data={series.data} loading={series.isFetching} error={series.error} refetch={() => series.refetch()} placeLabel={placeLabel} name={name} chartHeight={big ? 420 : 300} />
                     {stats ? <VerdictPanel stats={stats} unit={series.data!.unit} name={name} mode={mode} /> : <Skeleton className="h-52" />}
                   </div>
                 </div>

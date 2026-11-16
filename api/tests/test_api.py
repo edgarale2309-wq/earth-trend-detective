@@ -10,7 +10,7 @@ pytestmark = pytest.mark.skipif(not (client.get("/api/v1/health").json()["datase
 def test_health_and_variables():
     assert client.get("/api/v1/health").json()["status"] == "ok"
     body = client.get("/api/v1/variables").json()
-    assert len(body["variables"]) == 6 and len(body["regions"]) == 5
+    assert len(body["variables"]) == 6 and len(body["regions"]) == 9
 
 
 def test_trends_has_cells_and_summary():
@@ -18,7 +18,7 @@ def test_trends_has_cells_and_summary():
     assert r.status_code == 200
     j = r.json()
     assert j["n_cells"] > 0 and j["summary"]["state"] in {"rising", "falling", "no_trend"}
-    assert len(j["states"]) >= 31 and all(r["n_cells"] >= 1 for r in j["states"])
+    assert len(j["states"]) >= 600 and all(r["n_cells"] >= 1 for r in j["states"])
     assert j["data_status"] == "nasa"
 
 
@@ -28,7 +28,7 @@ def test_short_period_is_insufficient():
 
 
 def test_bad_variable_is_clear_error():
-    r = client.post("/api/v1/trends", json={"variable": "nope", "region": "mexico"})
+    r = client.post("/api/v1/trends", json={"variable": "nope", "region": "americas"})
     assert r.status_code == 422 and "Unknown variable" in r.json()["detail"]
 
 
@@ -56,7 +56,14 @@ def test_demo_variables_are_flagged():
 
 def test_state_series_and_geojson():
     g = client.get("/api/v1/geo/states").json()
-    assert len(g["features"]) >= 31
-    sid = g["features"][0]["properties"]["id"]
+    assert len(g["features"]) >= 600 and {"cc", "name_es"} <= set(g["features"][0]["properties"])
+    sid = next(f["properties"]["id"] for f in g["features"] if f["properties"]["cc"] == "MX")
     s = client.get("/api/v1/series", params={"var": "precipitation", "state": sid}).json()
     assert s["point"]["state"] == sid and s["mean"] > 0
+
+
+def test_country_outlines_and_row_country_codes():
+    c = client.get("/api/v1/geo/countries").json()
+    assert {f["properties"]["cc"] for f in c["features"]} >= {"US", "CA", "MX", "BR", "AR"}
+    rows = client.post("/api/v1/trends", json={"variable": "ozone", "region": "americas"}).json()["states"]
+    assert all(r["cc"] for r in rows)

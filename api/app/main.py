@@ -23,7 +23,7 @@ api = APIRouter(prefix="/api/v1")
 
 class TrendRequest(BaseModel):
     variable: str
-    region: str = "mexico"
+    region: str = "americas"
     start: int = Field(1984, ge=1980, le=2025)
     end: int = Field(2025, ge=1980, le=2025)
     resolution: str = Field("annual", pattern="^(annual|monthly)$")
@@ -55,7 +55,7 @@ def trends(req: TrendRequest):
 
 
 @api.get("/series")
-def series(var: str, region: str = "mexico", start: int = 1984, end: int = 2025,
+def series(var: str, region: str = "americas", start: int = 1984, end: int = 2025,
            resolution: str = Query("annual", pattern="^(annual|monthly)$"), deseasonalize: bool = True,
            lat: float | None = None, lon: float | None = None, state: str | None = None):
     return _guard(analysis.series, var, region, start, end, resolution, deseasonalize, lat, lon, state)
@@ -64,6 +64,11 @@ def series(var: str, region: str = "mexico", start: int = 1984, end: int = 2025,
 @api.get("/geo/states")
 def geo_states():
     return states.geojson()
+
+
+@api.get("/geo/countries")
+def geo_countries():
+    return states.country_outlines()
 
 
 @api.get("/place")

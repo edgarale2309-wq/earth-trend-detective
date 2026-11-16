@@ -12,11 +12,15 @@ export const VARIABLES: Record<VariableId, { accent: string; icon: string; map: 
   ozone: { accent: '#A78BFA', icon: 'ShieldHalf', map: 'RdBu_r' },
 }
 
-export const REGION_IDS = ['mexico', 'desert', 'rainforest', 'estuary', 'city'] as const
+export const REGION_IDS = ['americas', 'north_america', 'central_caribbean', 'south_america', 'mexico', 'desert', 'rainforest', 'estuary', 'city'] as const
 export type RegionId = (typeof REGION_IDS)[number]
 
 /** [[west, south], [east, north]] used to fit the map to each preset region. */
 export const REGION_BOUNDS: Record<RegionId, [[number, number], [number, number]]> = {
+  americas: [[-168, -57], [-34, 76]],
+  north_america: [[-168, 14], [-50, 76]],
+  central_caribbean: [[-94, 6], [-58, 24]],
+  south_america: [[-82, -57], [-34, 13]],
   mexico: [[-118.4, 14.4], [-86.5, 32.8]],
   desert: [[-115.5, 27.5], [-107.5, 32.5]],
   rainforest: [[-95, 15.5], [-88.5, 19.5]],
@@ -54,4 +58,21 @@ export function divergingColor(map: 'BrBG_r' | 'PuOr_r' | 'RdBu_r', t: number): 
 export function legendGradient(map: 'BrBG_r' | 'PuOr_r' | 'RdBu_r'): string {
   const stops = Array.from({ length: 11 }, (_, i) => divergingColor(map, (i / 10) * 2 - 1))
   return `linear-gradient(to right, ${stops.join(',')})`
+}
+
+/** Distinct, bright outline colour per country for the selected state. Bigger countries are hand-picked so neighbours differ. */
+const COUNTRY_COLORS: Record<string, string> = {
+  US: '#FACC15', CA: '#F472B6', MX: '#4ADE80', BR: '#FF7A1A', AR: '#C084FC', CL: '#E879F9', CO: '#F87171', PE: '#FDE047',
+  VE: '#BEF264', BO: '#F59E0B', EC: '#60A5FA', PY: '#818CF8', UY: '#FCA5A5', GY: '#86EFAC', SR: '#FDBA74', CU: '#C4B5FD',
+  GT: '#3B82F6', HN: '#F9A8D4', NI: '#A3E635', CR: '#FDA4AF', PA: '#93C5FD', DO: '#FCD34D', HT: '#FB923C',
+}
+// no cyan anywhere: it is reserved for the hover outline
+const FALLBACK = ['#FACC15', '#F472B6', '#A3E635', '#FB923C', '#C084FC', '#4ADE80', '#F87171', '#60A5FA', '#E879F9', '#FDE047']
+
+export function countryColor(cc: string | undefined): string {
+  if (!cc) return '#FACC15'
+  if (COUNTRY_COLORS[cc]) return COUNTRY_COLORS[cc]
+  let h = 0
+  for (const ch of cc) h = (h * 31 + ch.charCodeAt(0)) % FALLBACK.length
+  return FALLBACK[h]
 }

@@ -40,6 +40,10 @@ export function fmtP(p: number | null | undefined): string {
   return p < 0.001 ? '<0.001' : p.toFixed(3)
 }
 
+export function useGeoCountries() {
+  return useQuery({ queryKey: ['geo-countries'], queryFn: () => api.geoCountries(), staleTime: Infinity })
+}
+
 export function useGeoStates() {
   return useQuery({ queryKey: ['geo-states'], queryFn: () => api.geoStates(), staleTime: Infinity })
 }

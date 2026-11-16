@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Info, Minus, TrendingDown, TrendingUp, CircleDashed } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -20,6 +21,14 @@ export function SignificanceBadge({ state }: { state: Stats['state'] }) {
 
 export function VerdictPanel({ stats, unit, name, mode }: { stats: Stats; unit: string; name: string; mode: Mode }) {
   const { t } = useTranslation()
+  const [flash, setFlash] = useState(false)
+  const first = useRef(true)
+  useEffect(() => { // this card is where Explorer/Scientific shows up, so it pulses once when the mode changes
+    if (first.current) { first.current = false; return }
+    setFlash(true)
+    const h = window.setTimeout(() => setFlash(false), 1800)
+    return () => clearTimeout(h)
+  }, [mode])
   const rate = stats.sen_slope_per_decade
   const rateText = `${fmt(rate)} ${unit}`
   const pctText = stats.pct_per_decade != null ? ` (${fmt(stats.pct_per_decade, 1)}%)` : ''
@@ -34,7 +43,7 @@ export function VerdictPanel({ stats, unit, name, mode }: { stats: Stats; unit: 
     : t('state.sumInsufficient')
 
   return (
-    <section aria-labelledby="sig-h" className="min-w-0 rounded-2xl border border-purple bg-surface p-4 lg:p-5">
+    <section aria-labelledby="sig-h" className={`min-w-0 rounded-2xl border bg-surface p-4 transition-shadow duration-500 lg:p-5 ${flash ? 'border-accent shadow-[0_0_0_3px_rgb(var(--accent)/0.55)]' : 'border-purple'}`}>
       <div className="flex items-center justify-between gap-2">
         <h2 id="sig-h" className="section-label">{t('explorer.significance')}</h2>
         <SignificanceBadge state={stats.state} />
