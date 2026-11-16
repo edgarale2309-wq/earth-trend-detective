@@ -1,7 +1,7 @@
 import { CalendarRange, Info, Map as MapIcon, MapPin, Rows3, Table2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { REGION_IDS } from '../../core/variables'
+import { minYearOf, REGION_IDS } from '../../core/variables'
 import { Tip } from '../../shared/States'
 import { MAX_YEAR, MIN_YEAR, useExplorer } from '../explorer/store'
 
@@ -17,7 +17,8 @@ function Label({ icon: Icon, text, tip }: { icon: typeof MapPin; text: string; t
 
 function PeriodSlider() {
   const { t } = useTranslation()
-  const { start, end, set } = useExplorer()
+  const { start, end, set, variable } = useExplorer()
+  const MIN = minYearOf(variable, MIN_YEAR)
   const [a, setA] = useState(start)
   const [b, setB] = useState(end)
   useEffect(() => { setA(start); setB(end) }, [start, end])
@@ -26,7 +27,7 @@ function PeriodSlider() {
     const h = setTimeout(() => set({ start: a, end: b }), 450)
     return () => clearTimeout(h)
   }, [a, b]) // eslint-disable-line react-hooks/exhaustive-deps
-  const pct = (v: number) => ((v - MIN_YEAR) / (MAX_YEAR - MIN_YEAR)) * 100
+  const pct = (v: number) => ((v - MIN) / (MAX_YEAR - MIN)) * 100
   const thumb = 'pointer-events-none absolute inset-0 h-9 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto'
   return (
     <div className="w-64">
@@ -34,9 +35,9 @@ function PeriodSlider() {
       <div className="relative h-9" style={{ accentColor: 'rgb(var(--accent))' }}>
         <div className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded bg-deep-purple" />
         <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded border-t-4 border-accent" style={{ left: `${pct(a)}%`, right: `${100 - pct(b)}%` }} />
-        <input type="range" min={MIN_YEAR} max={MAX_YEAR} value={a} aria-label={`${t('explorer.filterPeriod')} (start)`} className={thumb}
+        <input type="range" min={MIN} max={MAX_YEAR} value={a} aria-label={`${t('explorer.filterPeriod')} (start)`} className={thumb}
           onChange={(e) => setA(Math.min(Number(e.target.value), b - 10))} />
-        <input type="range" min={MIN_YEAR} max={MAX_YEAR} value={b} aria-label={`${t('explorer.filterPeriod')} (end)`} className={thumb}
+        <input type="range" min={MIN} max={MAX_YEAR} value={b} aria-label={`${t('explorer.filterPeriod')} (end)`} className={thumb}
           onChange={(e) => setB(Math.max(Number(e.target.value), a + 10))} />
       </div>
       <div className="num flex justify-between text-xs text-ink"><span>{a}</span><span className="font-sans text-ink-muted">{t('explorer.periodMin')}</span><span>{b}</span></div>

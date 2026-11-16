@@ -241,7 +241,7 @@ export function TrendMap({ variable, region, focus, focusName, onResetFocus, dat
   }, [])
 
   return (
-    <div ref={wrap} className="relative flex h-full min-h-[560px] flex-col">
+    <div ref={wrap} className="relative flex flex-col lg:h-full lg:min-h-[560px]">
     <section className="flex min-h-0 flex-1 flex-col rounded-2xl border border-purple/60 bg-transparent p-3 sm:p-4" aria-labelledby="map-h">
       <div ref={hdr} className="relative flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <div>
@@ -273,7 +273,7 @@ export function TrendMap({ variable, region, focus, focusName, onResetFocus, dat
         </div>
       </div>
 
-      <div className="relative mt-3 min-h-[320px] flex-1 overflow-hidden rounded-xl" style={{ background: OCEAN }}>
+      <div className="relative mt-3 h-[58dvh] min-h-[320px] flex-1 overflow-hidden rounded-xl lg:h-auto" style={{ background: OCEAN }}>
         <div ref={box} role="region" aria-roledescription="map" aria-label={t('explorer.mapAlt')} style={{ position: 'absolute', inset: 0 }} className={asTable ? 'invisible' : ''} />
         {loading && <div className="absolute inset-x-0 top-0 z-10 h-1 animate-pulse border-t-2 border-accent" aria-hidden />}
         {loading && !data && <Skeleton className="absolute inset-0" />}

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { SeriesResponse } from '../../core/api'
 import type { VariableId } from '../../core/variables'
 import { ErrorState, Skeleton, Tip } from '../../shared/States'
+import { minYearOf } from '../../core/variables'
 import { MAX_YEAR, MIN_YEAR, useExplorer } from '../explorer/store'
 
 const TimeSeriesChart = lazy(() => import('./TimeSeriesChart'))
@@ -34,10 +35,11 @@ export function SeriesPanel({ variable, data, loading, error, refetch, placeLabe
   const { t } = useTranslation()
   const { deseasonalize, resolution, start, end, set } = useExplorer()
   const [short, setShort] = useState(false)
-  const full = start === MIN_YEAR && end === MAX_YEAR
+  const MIN = minYearOf(variable, MIN_YEAR)
+  const full = start === MIN && end === MAX_YEAR
 
   const onRange = (a: number, b: number) => {
-    const s = Math.max(MIN_YEAR, a), e = Math.min(MAX_YEAR, b)
+    const s = Math.max(MIN, a), e = Math.min(MAX_YEAR, b)
     if (e - s + 1 < 10) { setShort(true); return }
     setShort(false)
     set({ start: s, end: e })
@@ -93,7 +95,7 @@ export function SeriesPanel({ variable, data, loading, error, refetch, placeLabe
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
         <span className="inline-flex items-center gap-1.5"><MousePointer2 size={14} aria-hidden />{short ? <span role="alert" className="text-danger">{t('chart.brushNeed')}</span> : t('chart.brushHint')}</span>
         {!full && (
-          <button onClick={() => { setShort(false); set({ start: MIN_YEAR, end: MAX_YEAR }) }}
+          <button onClick={() => { setShort(false); set({ start: MIN, end: MAX_YEAR }) }}
             className="inline-flex h-8 items-center gap-1.5 rounded-full border border-input-border px-3 text-ink hover:bg-deep-purple">
             <RotateCcw size={12} aria-hidden />{t('chart.resetPeriod')}
           </button>

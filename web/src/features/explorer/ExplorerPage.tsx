@@ -12,7 +12,7 @@ import { VariablePanel } from '../trends/VariablePanel'
 import { VerdictPanel } from '../trends/VerdictPanel'
 import { countryBounds, countryName, stateLabel } from '../../core/places'
 import { stateAt } from '../../core/stateAt'
-import { countryColor } from '../../core/variables'
+import { countryColor, minYearOf } from '../../core/variables'
 import { useGeoCountries, useGeoStates, useQueryParams, useSeries, useTrends } from './hooks'
 import { MAX_YEAR, MIN_YEAR, useExplorer } from './store'
 
@@ -64,6 +64,8 @@ export default function ExplorerPage() {
   const [left, setLeft] = useState(w >= 1280)
   const [right, setRight] = useState(w >= 1280)
   const [asTable, setAsTable] = useState(false)
+  // switching to a variable whose record starts later (e.g. GLDAS in 2000) moves the start year up with it
+  useEffect(() => { const m = minYearOf(variable); if (variable !== 'home' && start < m) set({ start: m }) }, [variable, start]) // eslint-disable-line react-hooks/exhaustive-deps
   const [here, setHere] = useState<{ lat: number; lon: number } | null>(null)
 
   // On the first visit of the session, ask where the visitor is and centre the map on their country.
@@ -121,7 +123,7 @@ export default function ExplorerPage() {
     <>
       {offline && <p role="status" className="bg-deep-purple px-4 py-2 text-center text-sm">{t('states.offline')}</p>}
       <div className="p-3 sm:p-4 lg:h-[calc(100dvh-3.5rem)]">
-        <div className="h-[82dvh] min-w-0 lg:h-full">
+        <div className="min-w-0 lg:h-full">
           <TrendMap
             variable={variable} region={region} focus={focusBounds} focusName={focusBounds && focusCountry ? countryName(focusCountry, i18n.language) : null}
             onResetFocus={() => set({ focusCountry: null })} data={trends.data} geo={geo.data} countries={countries.data} loading={trends.isFetching || geo.isFetching} error={trends.error ?? geo.error}

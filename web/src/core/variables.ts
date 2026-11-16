@@ -12,6 +12,10 @@ export const VARIABLES: Record<VariableId, { accent: string; icon: string; map: 
   ozone: { accent: '#A78BFA', icon: 'ShieldHalf', map: 'RdBu_r' },
 }
 
+/** First year of the real record when it is later than 1984 (kept in sync with api/app/domain/catalog.py). */
+export const VARIABLE_START: Partial<Record<VariableId, number>> = {}
+export const minYearOf = (v: VariableId | 'home', floor = 1984) => (v === 'home' ? floor : Math.max(floor, VARIABLE_START[v] ?? floor))
+
 export const REGION_IDS = ['americas', 'north_america', 'central_caribbean', 'south_america', 'mexico', 'desert', 'rainforest', 'estuary', 'city'] as const
 export type RegionId = (typeof REGION_IDS)[number]
 

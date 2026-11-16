@@ -64,8 +64,11 @@ def main() -> None:
             sid = p["adm1_code"]
         seen.add(sid)
         name = p.get("name") or p.get("name_en") or p.get("woe_name") or sid
+        name_es = p.get("name_es") or name
+        if sid == "MX-DIF":  # Natural Earth calls Mexico City "Distrito Federal" / "México", which reads like the State of Mexico
+            name, name_es = "Mexico City", "Ciudad de México"
         feats.append({"type": "Feature", "id": sid, "geometry": geom, "properties": {
-            "id": sid, "name": name, "name_es": p.get("name_es") or name, "cc": cc, "country": p.get("admin")}})
+            "id": sid, "name": name, "name_es": name_es, "cc": cc, "country": p.get("admin")}})
         by_cc.setdefault(cc, []).append(g.intersection(WINDOW))
     out = ROOT / "data" / "americas_states.geojson"
     out.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")), encoding="utf-8")

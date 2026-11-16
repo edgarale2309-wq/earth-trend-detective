@@ -57,6 +57,8 @@ function ModeToggle() {
 
 function TopBar({ onMenu }: { onMenu: () => void }) {
   const { t, i18n } = useTranslation()
+  // Explorer / Scientific only changes what the variable pages show, so it is only offered there.
+  const onExplorer = useLocation().pathname.startsWith('/explore')
   const [copied, setCopied] = useState(false)
   const share = async () => {
     try { await navigator.clipboard.writeText(window.location.href) } catch { /* ignore */ }
@@ -65,12 +67,12 @@ function TopBar({ onMenu }: { onMenu: () => void }) {
   }
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-purple bg-background/95 px-3 backdrop-blur sm:gap-3 sm:px-4">
-      <button onClick={onMenu} aria-label={t('nav.menu')} className="flex h-11 w-11 items-center justify-center rounded-lg text-ink hover:bg-deep-purple lg:hidden">
+      <button onClick={onMenu} aria-label={t('nav.menu')} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink hover:bg-deep-purple lg:hidden">
         <Menu size={22} aria-hidden />
       </button>
       <Link to="/" className="truncate font-display text-base font-semibold sm:text-lg">{t('app.name')}</Link>
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
-        <ModeToggle />
+        {onExplorer && <ModeToggle />}
         <div role="group" aria-label={t('nav.language')} className="hidden items-center text-sm sm:flex">
           <Languages size={16} className="mr-1 text-ink-muted" aria-hidden />
           {(['en', 'es'] as const).map((l) => (

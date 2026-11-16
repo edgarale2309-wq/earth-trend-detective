@@ -58,7 +58,8 @@
     "footerAbout": "Acerca del proyecto",
     "howIntro": "Cuatro pasos sugeridos, en orden, para aprovechar la herramienta: empieza con el panorama en el mapa y termina comprobando si el cambio es real. Puedes saltar entre pasos, pero esta ruta es la forma más fácil de entrar.",
     "heroVideoAlt": "Animación de Earth Trend Detective: satélites sobre México, un mapa de tendencias y una gráfica de series de tiempo",
-    "carouselLabel": "Carrusel de variables"
+    "carouselLabel": "Carrusel de variables",
+    "auxTouch": "Desliza o usa las flechas para cambiar de variable."
   },
   "vars": {
     "precipitation": {
@@ -265,7 +266,13 @@
     "ci": "IC 95%",
     "n": "n",
     "agree": "Dos métodos coinciden",
-    "disagree": "Los métodos difieren"
+    "disagree": "Los métodos difieren",
+    "senCi": "IC 95% de la pendiente de Sen",
+    "lag1": "Autocorrelación de rezago 1",
+    "test": "Prueba usada",
+    "test_mann_kendall": "Mann-Kendall",
+    "test_pre_whitening": "Mann-Kendall con pre-blanqueo",
+    "testNote": "Los años vecinos de esta serie están correlacionados, así que la prueba se corrigió para evitar falsas alarmas."
   },
   "glossary": {
     "p": "Qué tan probable es una tendencia así de fuerte por pura casualidad. Menos de 0.05 se llama significativa.",

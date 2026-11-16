@@ -29,7 +29,13 @@ def _load(variable: str):
     return ds, ds.attrs.get("status", VARIABLES[variable]["status"])
 
 
+def first_year(variable: str, start: int) -> int:
+    """Real records can start after 1984 (GLDAS in 2000); never analyse the empty years before them."""
+    return max(start, VARIABLES.get(variable, {}).get("start_year", start))
+
+
 def _slice(variable: str, region: str, start: int, end: int):
+    start = first_year(variable, start)
     if region not in REGIONS:
         raise AnalysisError(f"Unknown region '{region}'")
     ds, status = _load(variable)
@@ -56,6 +62,7 @@ def _cube(variable: str):
 
 def state_series(variable: str, state_id: str, start: int, end: int) -> tuple[pd.Series, str]:
     arr, lats, times, status = _cube(variable)
+    start = first_year(variable, start)
     mem = st.membership()
     if state_id not in mem:
         raise AnalysisError(f"Unknown state '{state_id}'")
@@ -81,7 +88,7 @@ def trends(variable: str, region: str, start: int, end: int, resolution: str) ->
         "p": None if r.p_value is None else round(r.p_value, 5),
     } for sid, r in results.items()]
     return {
-        "variable": variable, "region": region, "start": start, "end": end, "resolution": resolution,
+        "variable": variable, "region": region, "start": first_year(variable, start), "end": end, "resolution": resolution,
         "unit": VARIABLES[variable]["unit"], "source": VARIABLES[variable]["source"], "data_status": status,
         "n_cells": int(da.lat.size * da.lon.size), "summary": summary.to_dict(), "states": rows,
         "fdr_significant": sum(r["state"] in ("rising", "falling") for r in rows),
@@ -137,7 +144,8 @@ def place_table(lat: float, lon: float, start: int = 1984, end: int = 2025) -> l
             ds = repo.load(var)
         except FileNotFoundError:
             continue
-        pt = ds["value"].sel(lat=lat, lon=lon, method="nearest").sel(time=slice(f"{start}-01-01", f"{end}-12-31"))
+        t0 = f"{first_year(var, start)}-01-01"
+        pt = ds["value"].sel(lat=lat, lon=lon, method="nearest").sel(time=slice(t0, f"{end}-12-31"))
         s = pd.Series(pt.values, index=pd.DatetimeIndex(pt.time.values))
         r = ts.analyze_series(s, "annual")
         rows.append({"variable": var, "unit": VARIABLES[var]["unit"], "source": VARIABLES[var]["source"],

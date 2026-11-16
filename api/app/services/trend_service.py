@@ -1,4 +1,4 @@
-"""Trend statistics: anomalies, Mann-Kendall, Sen slope, OLS + t-test, FDR."""
+"""Trend statistics: anomalies, Mann-Kendall (with an autocorrelation correction), Sen slope + its CI, OLS + t-test, FDR."""
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -26,6 +26,10 @@ class TrendResult:
     ci_low: float | None = None  # 95% CI of OLS slope, per decade
     ci_high: float | None = None
     methods_agree: bool | None = None
+    sen_ci_low: float | None = None  # 95% CI of the Sen slope (Theil-Sen), per decade
+    sen_ci_high: float | None = None
+    lag1: float | None = None  # lag-1 autocorrelation of the detrended series
+    test: str | None = None  # mann_kendall | pre_whitening (autocorrelation-corrected)
     reason: str | None = None
 
     def to_dict(self) -> dict:
@@ -67,24 +71,48 @@ def analyze_series(s: pd.Series, resolution: str = "annual", deseasonalize: bool
     return _fit(y.values, per_dec, base)
 
 
+def _lag1(y: np.ndarray, slope: float) -> float:
+    """Lag-1 autocorrelation of what is left after removing the Sen trend."""
+    x = np.arange(len(y), dtype=float)
+    resid = y - slope * x
+    resid = resid - np.median(resid)
+    if np.std(resid[:-1]) == 0 or np.std(resid[1:]) == 0:
+        return 0.0
+    return float(np.corrcoef(resid[:-1], resid[1:])[0, 1])
+
+
 def _fit(y: np.ndarray, per_dec: float, base: float) -> TrendResult:
     n = len(y)
     if n < 8 or np.nanstd(y) == 0:
         return TrendResult("insufficient", n, reason="Not enough variation or points")
     res = mk.original_test(y)
+    p, z, test = float(res.p), float(res.z), "mann_kendall"
+    # Positive autocorrelation makes the classic test over-confident (it finds trends in noise). When the lag-1
+    # autocorrelation is itself significant we use trend-free pre-whitening (Yue et al. 2002), which in our
+    # simulations keeps the false-alarm rate near 5% where the classic test reaches ~30% (see tests).
+    lag1 = _lag1(y, float(res.slope))
+    if abs(lag1) > 1.96 / np.sqrt(n):
+        try:
+            pw = mk.pre_whitening_modification_test(y)
+            if np.isfinite(pw.p) and np.isfinite(pw.z):
+                p, z, test = float(pw.p), float(pw.z), "pre_whitening"
+        except Exception:  # noqa: BLE001 - keep the classic result if the correction cannot be computed
+            pass
     x = np.arange(n, dtype=float)
     lr = stats.linregress(x, y)
     tcrit = stats.t.ppf(0.975, n - 2)
     sen = float(res.slope) * per_dec
     ci = (lr.slope - tcrit * lr.stderr) * per_dec, (lr.slope + tcrit * lr.stderr) * per_dec
-    sig = res.p < 0.05
+    _, _, lo, hi = stats.theilslopes(y, x, 0.95)
+    sig = p < 0.05
     state = ("rising" if sen > 0 else "falling") if sig else "no_trend"
     return TrendResult(
         state=state, n=n, sen_slope_per_decade=sen,
         pct_per_decade=(sen / base * 100.0) if base else None,
-        p_value=float(res.p), z=float(res.z), t=float(lr.slope / lr.stderr) if lr.stderr else None,
+        p_value=p, z=z, t=float(lr.slope / lr.stderr) if lr.stderr else None,
         r2=float(lr.rvalue**2), ci_low=float(ci[0]), ci_high=float(ci[1]),
         methods_agree=bool((lr.pvalue < 0.05) == sig and np.sign(lr.slope) == np.sign(res.slope)),
+        sen_ci_low=float(lo * per_dec), sen_ci_high=float(hi * per_dec), lag1=lag1, test=test,
     )
 
 

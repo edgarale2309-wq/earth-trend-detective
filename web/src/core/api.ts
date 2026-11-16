@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import type { RegionId, TrendState, VariableId } from './variables'
 
-export const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000/api/v1/'
+export const API_BASE = new URL((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000/api/v1/', typeof window === 'undefined' ? 'http://localhost' : window.location.origin).toString()
 
 const Stats = z.object({
   state: z.enum(['rising', 'falling', 'no_trend', 'insufficient']),
@@ -15,6 +15,10 @@ const Stats = z.object({
   ci_low: z.number().nullable().optional(),
   ci_high: z.number().nullable().optional(),
   methods_agree: z.boolean().nullable().optional(),
+  sen_ci_low: z.number().nullable().optional(),
+  sen_ci_high: z.number().nullable().optional(),
+  lag1: z.number().nullable().optional(),
+  test: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
 })
 export type Stats = z.infer<typeof Stats>

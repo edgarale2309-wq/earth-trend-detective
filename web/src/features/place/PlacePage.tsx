@@ -104,10 +104,10 @@ export default function PlacePage() {
                 return (
                   <li key={v} data-variable={v}>
                     <button onClick={() => open(v, { lat: q.data.lat, lon: q.data.lon })}
-                      className="flex min-h-16 w-full items-center gap-3 rounded-xl border border-purple bg-surface px-4 py-2 text-left hover:bg-deep-purple">
+                      className="flex min-h-16 w-full flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-purple bg-surface px-4 py-2 text-left hover:bg-deep-purple">
                       <Icon size={20} className="accent-transition shrink-0 text-accent" aria-hidden />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{t(`vars.${v}.name`)}</span>
+                      <span className="min-w-0 flex-1 basis-40">
+                        <span className="block font-medium">{t(`vars.${v}.name`)}</span>
                         <span className="num block text-sm text-ink-muted">{r.stats.state === 'insufficient' ? '—' : `${fmt(r.stats.sen_slope_per_decade)} ${r.unit} ${t('explorer.perDecade')}`}</span>
                       </span>
                       <DemoBadge status={r.data_status} />

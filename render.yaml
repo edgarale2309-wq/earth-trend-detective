@@ -1,0 +1,9 @@
+# Render blueprint: New + > Blueprint > pick this repository. One web service serves the site and the API.
+services:
+  - type: web
+    name: earth-trend-detective
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free            # if the free 512 MB runs out of memory, switch to "starter"
+    healthCheckPath: /api/v1/health
+    autoDeploy: true

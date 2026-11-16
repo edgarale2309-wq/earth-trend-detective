@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from app.domain import states
@@ -83,3 +85,17 @@ def clues(var: str):
 
 
 app.include_router(api)
+
+
+# In the single-container deployment the built web app lives in ./static and is served by this same process,
+# so the site and the API share one URL (no CORS, no second service).
+STATIC = Path(__file__).resolve().parents[1] / "static"
+if STATIC.is_dir():
+    @app.get("/{path:path}", include_in_schema=False)
+    def web_app(path: str):
+        if path.startswith("api/"):
+            raise HTTPException(404, "Not found")
+        target = (STATIC / path).resolve()
+        if path and target.is_file() and STATIC.resolve() in target.parents:
+            return FileResponse(target)
+        return FileResponse(STATIC / "index.html")  # client-side routes (/explore, /place, ...)

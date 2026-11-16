@@ -144,7 +144,7 @@ export function VariableCarousel({ active, setActive }: { active: number; setAct
         </div>
         <button className={arrow} onClick={() => go(active + 1)} aria-label={t('home.next')}><ChevronRight size={28} aria-hidden /></button>
       </div>
-      <p className="mx-auto mt-2 max-w-xl px-4 text-center text-sm leading-relaxed text-ink-muted"><span className="num">{active + 1} / {n}</span> · {t('home.aux')}</p>
+      <p className="mx-auto mt-2 max-w-xl px-4 text-center text-sm leading-relaxed text-ink-muted"><span className="num">{active + 1} / {n}</span> · {t(mobile ? 'home.auxTouch' : 'home.aux')}</p>
     </div>
   )
 }

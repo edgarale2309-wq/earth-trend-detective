@@ -70,11 +70,15 @@ export function VerdictPanel({ stats, unit, name, mode }: { stats: Stats; unit: 
           <dl className="num grid grid-cols-2 gap-x-4 gap-y-2 border-t border-purple pt-3 text-sm">
             <Row k={<GlossaryTip term="sen">{t('stats.sen')}</GlossaryTip>} v={`${fmt(stats.sen_slope_per_decade, 3)}`} />
             <Row k={<GlossaryTip term="p">{t('stats.p')}</GlossaryTip>} v={fmtP(stats.p_value)} />
+            <Row k={t('stats.senCi')} v={`[${fmt(stats.sen_ci_low, 3)}, ${fmt(stats.sen_ci_high, 3)}]`} />
             <Row k={t('stats.z')} v={fmt(stats.z, 2)} />
             <Row k={t('stats.t')} v={fmt(stats.t, 2)} />
             <Row k={t('stats.r2')} v={stats.r2 != null ? stats.r2.toFixed(3) : '—'} />
             <Row k={t('stats.n')} v={String(stats.n)} />
             <div className="col-span-2 flex justify-between"><dt className="font-sans text-ink-muted"><GlossaryTip term="ci">{t('stats.ci')}</GlossaryTip></dt><dd>[{fmt(stats.ci_low, 3)}, {fmt(stats.ci_high, 3)}]</dd></div>
+            <Row k={t('stats.lag1')} v={stats.lag1 != null ? stats.lag1.toFixed(2) : '—'} />
+            <Row k={t('stats.test')} v={t(`stats.test_${stats.test ?? 'mann_kendall'}`)} />
+            {stats.test === 'pre_whitening' && <div className="col-span-2 font-sans text-xs text-ink-muted">{t('stats.testNote')}</div>}
             <div className="col-span-2 font-sans text-xs text-ink-muted">{stats.methods_agree ? t('stats.agree') : t('stats.disagree')}</div>
           </dl>
         )}
