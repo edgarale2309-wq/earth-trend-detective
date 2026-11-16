@@ -17,7 +17,12 @@
     "menu": "Open menu",
     "close": "Close menu",
     "sidebar": "Main navigation",
-    "back": "Back to Home"
+    "back": "Back to Home",
+    "skip": "Skip to main content",
+    "titleHome": "Home",
+    "titleExplore": "Explorer",
+    "titlePlace": "My place",
+    "titleInfo": "More information"
   },
   "home": {
     "eyebrow": "NASA Space Apps Challenge 2026",
@@ -52,7 +57,8 @@
     "challengeCta": "Start the challenge",
     "footerAbout": "About this project",
     "howIntro": "Four suggested steps, in order, to get the most out of the tool: start with the big picture on the map and finish by checking whether the change is real. You can jump around, but this route is the easiest way in.",
-    "heroVideoAlt": "Animation of the Earth Trend Detective: satellites over Mexico, a trend map and a time-series chart"
+    "heroVideoAlt": "Animation of the Earth Trend Detective: satellites over Mexico, a trend map and a time-series chart",
+    "carouselLabel": "Variable carousel"
   },
   "vars": {
     "precipitation": {
@@ -228,7 +234,11 @@
     "brushHint": "Drag across the chart to analyze a specific period.",
     "brushNeed": "Pick at least 10 years to test a trend.",
     "resetPeriod": "Reset to full period",
-    "alt": "Chart of the {{name}} series with its trend line"
+    "alt": "Chart of the {{name}} series with its trend line",
+    "dataTable": "View the chart data as a table",
+    "colDate": "Date",
+    "colValue": "Value",
+    "srSummary": "{{name}} in {{place}}: {{points}} points from {{from}} to {{to}}. Trend: {{trend}}."
   },
   "state": {
     "rising": "Significant ↑",
@@ -275,14 +285,14 @@
     "introTitle": "How the challenge works",
     "introLead": "Real data hides real stories. Can you spot them before the numbers do?",
     "i1": "We show you one variable and one region of the Americas.",
-    "i2": "You guess: is it rising, falling, or is there no clear trend?",
-    "i3": "We reveal what the NASA data say, with the rate of change and how sure we are.",
-    "i4": "Six cases, one per variable. Your score shows how well you read nature's signals.",
+    "i2": "Answer a question: a trend to read, a statistics idea, or a true story.",
+    "i3": "We reveal what the NASA data and the science say, and how sure we are.",
+    "i4": "Six questions per round, drawn at random from several banks. Your score shows how well you read nature’s signals.",
     "introNote": "Tip: \"no clear trend\" is a valid answer. Sometimes the honest conclusion is that we cannot tell.",
     "start": "Start the challenge",
     "or": "Prefer to explore freely?",
     "explore": "Browse the variables",
-    "case": "Case {{n}} of {{total}}",
+    "case": "Question {{n}} of {{total}}",
     "question": "Rising, falling or no clear trend?",
     "where": "{{name}} · {{region}} · {{start}}–{{end}}",
     "rising": "Rising",
@@ -294,9 +304,27 @@
     "openExplorer": "Investigate this case",
     "next": "Next case",
     "finish": "See score",
-    "score": "You solved {{score}} of {{total}} cases.",
-    "again": "Play again",
-    "loading": "Preparing cases…"
+    "score": "You got {{score}} of {{total}} right.",
+    "again": "New random round",
+    "loading": "Preparing cases…",
+    "modeTitle": "Choose your case file",
+    "mode_mixed": "Surprise mix",
+    "mode_mixed_desc": "Two data cases, two concept questions and two real stories, picked at random.",
+    "mode_data": "Data cases",
+    "mode_data_desc": "Guess the trend from real NASA data. Different variables and regions every round.",
+    "mode_concepts": "Statistics lab",
+    "mode_concepts_desc": "Quick questions on p-values, anomalies, seasonality and more.",
+    "mode_stories": "Real-world stories",
+    "mode_stories_desc": "True stories from the Earth system, each with a question to solve.",
+    "kind_data": "Data case",
+    "kind_concept": "Concept",
+    "kind_story": "Real story",
+    "correctAnswer": "correct answer",
+    "yourAnswer": "your answer",
+    "tier_top": "Sharp eyes, detective! You read the signals very well.",
+    "tier_mid": "Good work. Revisit the explanations and try another round.",
+    "tier_low": "Every detective starts here. Read the explanations and play again.",
+    "changeMode": "Change mode"
   },
   "place": {
     "title": "My place",

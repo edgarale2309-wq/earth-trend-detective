@@ -19,7 +19,7 @@ export function InfoPage() {
         <p className="mt-3 max-w-2xl text-lg text-ink-muted">{t('info.lead')}</p>
       </header>
 
-      <section aria-labelledby="flow-h">
+      <section>
         <h2 id="flow-h" className="font-display text-xl font-semibold">{t('info.flowTitle')}</h2>
         <ol className="mt-4 flex flex-wrap items-center gap-2">
           {STEPS.map(({ n }, i) => (

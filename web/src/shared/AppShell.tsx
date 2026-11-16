@@ -162,15 +162,23 @@ function Sidebar({ open, close }: { open: boolean; close: () => void }) {
 }
 
 export default function AppShell() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const loc = useLocation()
   useEffect(() => { setOpen(false) }, [loc.pathname])
+  // a distinct document title per page, so screen-reader users know where they are
+  useEffect(() => {
+    const key = loc.pathname.startsWith('/explore') ? 'titleExplore' : loc.pathname.startsWith('/place') ? 'titlePlace'
+      : loc.pathname.startsWith('/info') || loc.pathname.startsWith('/about') ? 'titleInfo' : loc.pathname === '/' ? 'titleHome' : null
+    if (key) document.title = `${t(`nav.${key}`)} · ${t('app.name')}`
+  }, [loc.pathname, t])
   return (
     <div className="flex min-h-screen">
+      <a href="#main" className="sr-only z-[100] rounded-lg bg-ink px-4 py-2 font-medium text-background focus:not-sr-only focus:fixed focus:left-3 focus:top-3">{t('nav.skip')}</a>
       <Sidebar open={open} close={() => setOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar onMenu={() => setOpen(true)} />
-        <main id="main" className="min-w-0 flex-1"><Outlet /></main>
+        <main id="main" tabIndex={-1} className="min-w-0 flex-1 outline-none"><Outlet /></main>
       </div>
     </div>
   )

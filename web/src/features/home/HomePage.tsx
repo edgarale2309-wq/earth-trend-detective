@@ -17,9 +17,9 @@ function HeroVideo() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { v.pause(); v.currentTime = 5 } else void v.play().catch(() => {})
   }, [])
   return (
-    <div className="mx-auto w-full max-w-2xl xl:max-w-none">
+    <div className="mx-auto w-full max-w-2xl xl:max-w-none" role="img" aria-label={t('home.heroVideoAlt')}>
       <video
-        ref={ref} src="/media/hero.mp4" aria-label={t('home.heroVideoAlt')} role="img"
+        ref={ref} src="/media/hero.mp4" aria-hidden
         autoPlay muted loop playsInline preload="auto"
         className="block aspect-video w-full bg-transparent object-cover mix-blend-screen"
         style={{ WebkitMaskImage: 'radial-gradient(ellipse 72% 72% at 50% 50%, #000 55%, transparent 100%)', maskImage: 'radial-gradient(ellipse 72% 72% at 50% 50%, #000 55%, transparent 100%)' }}

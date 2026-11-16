@@ -77,6 +77,19 @@ export function SeriesPanel({ variable, data, loading, error, refetch, placeLabe
           ) : <Skeleton className="h-[300px]" />}
       </div>
       <Legend />
+      {data && (
+        <details className="mt-3 text-sm">
+          <summary className="inline-flex min-h-9 cursor-pointer items-center rounded-lg text-ink-muted underline underline-offset-4 hover:text-ink">{t('chart.dataTable')}</summary>
+          <p className="sr-only">{t('chart.srSummary', { name, place: placeLabel, points: data.values.length, from: data.dates[0], to: data.dates[data.dates.length - 1], trend: t(`state.${data.stats.state}`) })}</p>
+          <div className="mt-2 max-h-56 overflow-auto rounded-lg border border-purple">
+            <table className="w-full text-left">
+              <caption className="sr-only">{t('chart.srSummary', { name, place: placeLabel, points: data.values.length, from: data.dates[0], to: data.dates[data.dates.length - 1], trend: t(`state.${data.stats.state}`) })}</caption>
+              <thead className="sticky top-0 bg-deep-purple text-xs text-ink-muted"><tr><th scope="col" className="p-2">{t('chart.colDate')}</th><th scope="col" className="p-2">{t('chart.colValue')} ({data.unit})</th></tr></thead>
+              <tbody>{data.dates.map((d, k) => <tr key={d} className="border-t border-purple"><td className="num p-2">{d.slice(0, resolution === 'monthly' ? 7 : 4)}</td><td className="num p-2">{data.values[k]}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </details>
+      )}
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
         <span className="inline-flex items-center gap-1.5"><MousePointer2 size={14} aria-hidden />{short ? <span role="alert" className="text-danger">{t('chart.brushNeed')}</span> : t('chart.brushHint')}</span>
         {!full && (

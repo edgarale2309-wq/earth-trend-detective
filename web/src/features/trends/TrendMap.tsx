@@ -222,7 +222,7 @@ export function TrendMap({ variable, region, focus, focusName, onResetFocus, dat
       let lp = left.open ? 330 : 20
       let rp = right.open && side ? side.offsetWidth + 50 : 20
       if (lp + rp > w * 0.7) { lp = 20; rp = 20 } // never squeeze the map to nothing
-      m.fitBounds(target, { padding: { top: 24, bottom: 24, left: lp, right: rp }, duration: document.hidden ? 0 : 1100 })
+      m.fitBounds(target, { padding: { top: 24, bottom: 24, left: lp, right: rp }, duration: document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1100 })
     }
     if (ready.current) go(); else pendingFit.current = go // the style finishes loading asynchronously; applied right after
   }, [targetKey]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -246,7 +246,7 @@ export function TrendMap({ variable, region, focus, focusName, onResetFocus, dat
       <div ref={hdr} className="relative flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <div>
           <div className="relative flex items-center gap-1.5">
-            <h2 id="map-h" className="section-label">{t('explorer.map')}</h2>
+            <h1 id="map-h" className="section-label">{t('explorer.map')}</h1>
             <button onClick={() => setShowNote((v) => !v)} aria-expanded={showNote} aria-label={t('explorer.mapNote')} title={t('explorer.mapNote')}
               className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted hover:bg-deep-purple hover:text-ink">
               <Info size={16} aria-hidden />
@@ -274,7 +274,7 @@ export function TrendMap({ variable, region, focus, focusName, onResetFocus, dat
       </div>
 
       <div className="relative mt-3 min-h-[320px] flex-1 overflow-hidden rounded-xl" style={{ background: OCEAN }}>
-        <div ref={box} role="img" aria-label={t('explorer.mapAlt')} style={{ position: 'absolute', inset: 0 }} className={asTable ? 'invisible' : ''} />
+        <div ref={box} role="region" aria-roledescription="map" aria-label={t('explorer.mapAlt')} style={{ position: 'absolute', inset: 0 }} className={asTable ? 'invisible' : ''} />
         {loading && <div className="absolute inset-x-0 top-0 z-10 h-1 animate-pulse border-t-2 border-accent" aria-hidden />}
         {loading && !data && <Skeleton className="absolute inset-0" />}
         {loading && <p role="status" className="absolute bottom-2 right-2 z-10 rounded-lg bg-deep-purple px-2 py-1 text-xs">{t('explorer.analyzing', { n: data?.n_cells ?? '…' })}</p>}

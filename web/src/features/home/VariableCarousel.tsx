@@ -47,7 +47,7 @@ export function VariableCarousel({ active, setActive }: { active: number; setAct
   return (
     <div>
       <div
-        ref={box} tabIndex={0} role="region" aria-roledescription="carousel" aria-label={t('home.varsTitle')}
+        ref={box} tabIndex={0} role="region" aria-roledescription="carousel" aria-label={t('home.carouselLabel')}
         onKeyDown={(e) => { if (e.key === 'ArrowRight') { e.preventDefault(); go(active + 1) } if (e.key === 'ArrowLeft') { e.preventDefault(); go(active - 1) } }}
         onPointerDown={(e) => { drag.current = { x: e.clientX, down: true, moved: false } }}
         onPointerMove={(e) => { if (drag.current.down && Math.abs(e.clientX - drag.current.x) > 8) drag.current.moved = true }}
@@ -60,14 +60,14 @@ export function VariableCarousel({ active, setActive }: { active: number; setAct
         className="relative cursor-grab select-none overflow-hidden py-6 active:cursor-grabbing [touch-action:pan-y]"
         style={{ height: height + 48 }}
       >
-        <ul
-          className="m-0 flex list-none p-0"
+        <div
+          className="m-0 flex p-0"
           style={{ gap: GAP, transform: `translateX(${offset}px)`, transition: `transform 600ms ${EASE}`, height }}
         >
           {VARIABLE_IDS.map((id, i) => {
             const isActive = i === active
             return (
-              <li
+              <div
                 key={id} data-variable={id}
                 role="group" aria-roledescription="slide" aria-label={t('home.slide', { n: i + 1, total: n, name: t(`vars.${id}.name`) })}
                 onMouseEnter={(e) => {
@@ -124,17 +124,17 @@ export function VariableCarousel({ active, setActive }: { active: number; setAct
                     <VariableArt variable={id} size={mobile ? 120 : Math.round(height * 0.62)} />
                   </div>
                 </div>
-              </li>
+              </div>
             )
           })}
-        </ul>
+        </div>
       </div>
 
       <div className="mt-2 flex items-center justify-center gap-5">
         <button className={arrow} onClick={() => go(active - 1)} aria-label={t('home.previous')}><ChevronLeft size={28} aria-hidden /></button>
         <div className="flex items-center" role="group" aria-label={t('nav.variables')}>
           {VARIABLE_IDS.map((id, i) => (
-            <button key={id} onClick={() => go(i)} aria-label={t('home.goTo', { n: i + 1 })} aria-current={i === active} data-variable={id} className="flex h-11 items-center px-1">
+            <button key={id} onClick={() => go(i)} aria-label={t('home.goTo', { n: i + 1 })} aria-current={i === active} data-variable={id} className="flex h-11 min-w-6 items-center justify-center px-1.5">
               <span
                 className="block h-2.5 rounded-full transition-[width,background-color] duration-300"
                 style={{ width: i === active ? 30 : 10, background: i === active ? 'rgb(var(--accent))' : 'rgb(var(--on-surface-variant) / 0.45)' }}

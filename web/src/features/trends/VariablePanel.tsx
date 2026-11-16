@@ -45,7 +45,7 @@ export function VariablePanel({ variable, imageState, dataStatus }: { variable: 
       <div className="flex items-center gap-4">
         <VariableImage variable={variable} state={imageState} size={96} className="shrink-0" />
         <div className="min-w-0">
-          <h1 className="accent-transition font-display text-xl font-semibold leading-tight text-accent [overflow-wrap:break-word]">{t(`vars.${variable}.name`)}</h1>
+          <h2 className="accent-transition font-display text-xl font-semibold leading-tight text-accent [overflow-wrap:break-word]">{t(`vars.${variable}.name`)}</h2>
           <p className="mt-1 text-xs text-ink-muted">{t('explorer.sensor')}: {t(`vars.${variable}.sensor`)}</p>
           <div className="mt-2"><DemoBadge status={dataStatus} /></div>
         </div>

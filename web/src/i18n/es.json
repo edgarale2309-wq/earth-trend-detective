@@ -17,7 +17,12 @@
     "menu": "Abrir menú",
     "close": "Cerrar menú",
     "sidebar": "Navegación principal",
-    "back": "Volver al inicio"
+    "back": "Volver al inicio",
+    "skip": "Saltar al contenido principal",
+    "titleHome": "Inicio",
+    "titleExplore": "Explorador",
+    "titlePlace": "Mi lugar",
+    "titleInfo": "Más información"
   },
   "home": {
     "eyebrow": "NASA Space Apps Challenge 2026",
@@ -52,7 +57,8 @@
     "challengeCta": "Empezar el reto",
     "footerAbout": "Acerca del proyecto",
     "howIntro": "Cuatro pasos sugeridos, en orden, para aprovechar la herramienta: empieza con el panorama en el mapa y termina comprobando si el cambio es real. Puedes saltar entre pasos, pero esta ruta es la forma más fácil de entrar.",
-    "heroVideoAlt": "Animación de Earth Trend Detective: satélites sobre México, un mapa de tendencias y una gráfica de series de tiempo"
+    "heroVideoAlt": "Animación de Earth Trend Detective: satélites sobre México, un mapa de tendencias y una gráfica de series de tiempo",
+    "carouselLabel": "Carrusel de variables"
   },
   "vars": {
     "precipitation": {
@@ -228,7 +234,11 @@
     "brushHint": "Arrastra sobre la gráfica para analizar un periodo específico.",
     "brushNeed": "Elige al menos 10 años para probar una tendencia.",
     "resetPeriod": "Restablecer periodo completo",
-    "alt": "Gráfica de la serie de {{name}} con su línea de tendencia"
+    "alt": "Gráfica de la serie de {{name}} con su línea de tendencia",
+    "dataTable": "Ver los datos de la gráfica como tabla",
+    "colDate": "Fecha",
+    "colValue": "Valor",
+    "srSummary": "{{name}} en {{place}}: {{points}} puntos de {{from}} a {{to}}. Tendencia: {{trend}}."
   },
   "state": {
     "rising": "Significativo ↑",
@@ -275,14 +285,14 @@
     "introTitle": "Cómo funciona el reto",
     "introLead": "Los datos reales esconden historias reales. ¿Puedes verlas antes que los números?",
     "i1": "Te mostramos una variable y una región de América.",
-    "i2": "Tú adivinas: ¿sube, baja o no hay tendencia clara?",
-    "i3": "Revelamos qué dicen los datos de la NASA, con la tasa de cambio y qué tan seguros estamos.",
-    "i4": "Seis casos, uno por variable. Tu puntaje muestra qué tan bien lees las señales de la naturaleza.",
+    "i2": "Responde una pregunta: una tendencia por leer, una idea de estadística o una historia real.",
+    "i3": "Revelamos qué dicen los datos de la NASA y la ciencia, y qué tan seguros estamos.",
+    "i4": "Seis preguntas por ronda, tomadas al azar de varios bancos. Tu puntaje muestra qué tan bien lees las señales de la naturaleza.",
     "introNote": "Consejo: \"sin tendencia clara\" es una respuesta válida. A veces la conclusión honesta es que no podemos saberlo.",
     "start": "Empezar el reto",
     "or": "¿Prefieres explorar libremente?",
     "explore": "Ver las variables",
-    "case": "Caso {{n}} de {{total}}",
+    "case": "Pregunta {{n}} de {{total}}",
     "question": "¿Al alza, a la baja o sin tendencia clara?",
     "where": "{{name}} · {{region}} · {{start}}–{{end}}",
     "rising": "Al alza",
@@ -294,9 +304,27 @@
     "openExplorer": "Investigar este caso",
     "next": "Siguiente caso",
     "finish": "Ver puntaje",
-    "score": "Resolviste {{score}} de {{total}} casos.",
-    "again": "Jugar de nuevo",
-    "loading": "Preparando casos…"
+    "score": "Acertaste {{score}} de {{total}}.",
+    "again": "Nueva ronda al azar",
+    "loading": "Preparando casos…",
+    "modeTitle": "Elige tu expediente",
+    "mode_mixed": "Mezcla sorpresa",
+    "mode_mixed_desc": "Dos casos con datos, dos preguntas de conceptos y dos historias reales, elegidos al azar.",
+    "mode_data": "Casos con datos",
+    "mode_data_desc": "Adivina la tendencia con datos reales de la NASA. Variables y regiones distintas cada ronda.",
+    "mode_concepts": "Laboratorio de estadística",
+    "mode_concepts_desc": "Preguntas rápidas sobre valores p, anomalías, estacionalidad y más.",
+    "mode_stories": "Historias del mundo real",
+    "mode_stories_desc": "Historias verdaderas del sistema Tierra, cada una con una pregunta por resolver.",
+    "kind_data": "Caso con datos",
+    "kind_concept": "Concepto",
+    "kind_story": "Historia real",
+    "correctAnswer": "respuesta correcta",
+    "yourAnswer": "tu respuesta",
+    "tier_top": "¡Buen ojo, detective! Lees muy bien las señales.",
+    "tier_mid": "Buen trabajo. Repasa las explicaciones y prueba otra ronda.",
+    "tier_low": "Todo detective empieza aquí. Lee las explicaciones y juega de nuevo.",
+    "changeMode": "Cambiar modo"
   },
   "place": {
     "title": "Mi lugar",
